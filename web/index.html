@@ -1,335 +1,526 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="classic">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Jadwal-In • Swiss Academic OS</title>
-  
-  <!-- PWA & Apple Web App Meta -->
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0A0A0A">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>luang.in — Execution OS &amp; Academic Planner</title>
+
+  <link rel="manifest" href="manifest.json?v=5">
+  <meta name="theme-color" content="#4772FA">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Jadwal-In">
-  <link rel="icon" type="image/svg+xml" href="icon.svg">
-  
-  <link rel="stylesheet" href="style.css?v=3">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="luang.in">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=5">
+  <link rel="apple-touch-icon-precomposed" href="apple-touch-icon.png?v=5">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=5">
+  <link rel="icon" type="image/svg+xml" href="icon.svg?v=5">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
-  <div id="toast-container" class="toast-container"></div>
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
-  <!-- PIN LOCK SCREEN OVERLAY (Swiss Security Gate) -->
+  <!-- PIN Access Gate -->
   <div id="pin-lock-overlay" class="pin-lock-overlay">
-    <div class="pin-card">
-      <div class="brand-stamp" style="justify-content: center; margin-bottom: 12px;">Jadwal-In // Security</div>
-      <div class="pin-title">ENTER 4-DIGIT ACCESS PIN</div>
-      <div class="pin-subtitle">Masukkan PIN untuk membuka database akademik Anda.</div>
-      
-      <!-- 4 PIN Dots -->
-      <div class="pin-dots-row" id="pin-dots-group">
+    <div class="pin-card" role="dialog" aria-modal="true" aria-labelledby="pin-gate-heading">
+      <div class="pin-brand">
+        <svg class="brand-logo-svg" viewBox="0 0 512 512" width="28" height="28" aria-hidden="true">
+          <rect width="512" height="512" rx="116" fill="#131416"/>
+          <rect x="88" y="96" width="336" height="96" rx="22" fill="#23262F"/>
+          <rect x="116" y="130" width="144" height="28" rx="14" fill="#E8EAEC"/>
+          <rect x="88" y="216" width="336" height="80" rx="20" fill="#4772FA"/>
+          <circle cx="136" cy="256" r="14" fill="#FFFFFF"/>
+          <rect x="172" y="244" width="164" height="24" rx="12" fill="#FFFFFF" opacity="0.95"/>
+          <rect x="88" y="320" width="336" height="96" rx="22" fill="#23262F"/>
+        </svg>
+        <span class="brand-wordmark">luang.in</span>
+      </div>
+      <div id="pin-gate-heading" class="pin-title">Masukkan PIN akses</div>
+      <p class="pin-subtitle">Bukan sekadar daftar tugas, ini taktik harianmu. Masukkan 4 digit PIN untuk membuka ruang kerja.</p>
+
+      <div class="pin-dots-row" id="pin-dots-group" aria-hidden="true">
         <div class="pin-dot"></div>
         <div class="pin-dot"></div>
         <div class="pin-dot"></div>
         <div class="pin-dot"></div>
       </div>
 
-      <div id="pin-error-msg" class="pin-error"></div>
+      <div id="pin-error-msg" class="pin-error" role="status"></div>
 
-      <!-- Swiss 3x4 Keypad -->
       <div class="pin-keypad">
-        <button class="pin-btn" data-num="1">1</button>
-        <button class="pin-btn" data-num="2">2</button>
-        <button class="pin-btn" data-num="3">3</button>
-        <button class="pin-btn" data-num="4">4</button>
-        <button class="pin-btn" data-num="5">5</button>
-        <button class="pin-btn" data-num="6">6</button>
-        <button class="pin-btn" data-num="7">7</button>
-        <button class="pin-btn" data-num="8">8</button>
-        <button class="pin-btn" data-num="9">9</button>
-        <button class="pin-btn pin-func" id="btn-pin-clear">C</button>
-        <button class="pin-btn" data-num="0">0</button>
-        <button class="pin-btn pin-func" id="btn-pin-backspace">⌫</button>
+        <button type="button" class="pin-btn" data-num="1">1</button>
+        <button type="button" class="pin-btn" data-num="2">2</button>
+        <button type="button" class="pin-btn" data-num="3">3</button>
+        <button type="button" class="pin-btn" data-num="4">4</button>
+        <button type="button" class="pin-btn" data-num="5">5</button>
+        <button type="button" class="pin-btn" data-num="6">6</button>
+        <button type="button" class="pin-btn" data-num="7">7</button>
+        <button type="button" class="pin-btn" data-num="8">8</button>
+        <button type="button" class="pin-btn" data-num="9">9</button>
+        <button type="button" class="pin-btn pin-func" id="btn-pin-clear" aria-label="Hapus semua">C</button>
+        <button type="button" class="pin-btn" data-num="0">0</button>
+        <button type="button" class="pin-btn pin-func" id="btn-pin-backspace" aria-label="Hapus satu digit">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+        </button>
       </div>
 
-      <div class="pin-hint">[ DEFAULT PIN: 1234 ]</div>
+      <div class="pin-hint">PIN bawaan: <code class="inline-code">1234</code> • Bisa diubah melalui variabel <code class="inline-code">JADWALIN_PIN</code></div>
     </div>
   </div>
 
-  <div id="app" class="app-container">
-    
-    <!-- Technical Header Strip (Swiss Grid) -->
-    <header class="technical-header">
-      <div class="header-top-row">
-        <div class="brand-stamp">Jadwal-In // Academic</div>
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span id="cloud-sync-status" class="mono-tag" style="font-size: 9px; padding: 1px 5px;">[CLOUD // 🟢 SYNCED]</span>
-          <div class="system-clock" id="live-clock">--:--:--</div>
+  <!-- App Shell (TickTick Framed Sheet) -->
+  <div id="app" class="app-shell">
+    <!-- Left Icon Rail (Desktop) -->
+    <aside class="icon-rail" aria-label="Navigasi modul">
+      <button type="button" class="rail-brand-btn" id="btn-rail-home" title="luang.in">
+        <svg viewBox="0 0 512 512" width="28" height="28" aria-hidden="true">
+          <rect width="512" height="512" rx="116" fill="#131416"/>
+          <rect x="88" y="96" width="336" height="96" rx="22" fill="#23262F"/>
+          <rect x="116" y="130" width="144" height="28" rx="14" fill="#E8EAEC"/>
+          <rect x="88" y="216" width="336" height="80" rx="20" fill="#4772FA"/>
+          <circle cx="136" cy="256" r="14" fill="#FFFFFF"/>
+          <rect x="172" y="244" width="164" height="24" rx="12" fill="#FFFFFF" opacity="0.95"/>
+          <rect x="88" y="320" width="336" height="96" rx="22" fill="#23262F"/>
+        </svg>
+      </button>
+
+      <div class="rail-nav-group">
+        <button type="button" class="rail-btn active" data-module="tasks" title="Tugas &amp; Hari Ini" aria-label="Tugas dan Hari Ini">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </button>
+        <button type="button" class="rail-btn" data-module="calendar" title="Kalender &amp; Jadwal Kuliah" aria-label="Kalender dan Jadwal Kuliah">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </button>
+        <button type="button" class="rail-btn" data-module="matrix" title="Matriks Prioritas Eisenhower" aria-label="Matriks Prioritas">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>
+        </button>
+        <button type="button" class="rail-btn" data-module="focus" title="PomoFlow Studio" aria-label="PomoFlow Studio">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5"/><path d="M9 2h6"/><path d="M12 2v3"/></svg>
+        </button>
+        <button type="button" class="rail-btn" data-module="habits" title="Streak-Safe Habit" aria-label="Habit Tracker">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+        </button>
+        <button type="button" class="rail-btn" data-module="insights" title="Countdown &amp; Momentum" aria-label="Countdown dan Momentum">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 17l6-6 4 4 8-8"/><path d="M17 7h4v4"/></svg>
+        </button>
+      </div>
+
+      <div class="rail-footer-group">
+        <button type="button" class="rail-btn" id="btn-cycle-theme" title="Ganti tema warna" aria-label="Ganti tema warna">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M4.93 4.93l1.41 1.41"/><path d="M17.66 17.66l1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M6.34 17.66l-1.41 1.41"/><path d="M19.07 4.93l-1.41 1.41"/></svg>
+        </button>
+        <button type="button" class="rail-btn" data-module="settings" title="Pengaturan" aria-label="Pengaturan">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.6.85 1 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Navigation Sidebar (TickTick Smart Lists, Courses, Lists, Tags) -->
+    <aside id="nav-sidebar" class="nav-sidebar" aria-label="Daftar pintar dan mata kuliah">
+      <div class="sidebar-workspace-header">
+        <div class="workspace-identity">
+          <div class="workspace-name-row">
+            <span class="workspace-brand">luang.in</span>
+            <span class="momentum-pill" id="sidebar-momentum-badge">Lv. 1</span>
+          </div>
+          <div class="workspace-sub" id="sidebar-user-role">Memuat profil...</div>
+        </div>
+        <button type="button" class="icon-ghost-btn mobile-only" id="btn-close-sidebar" aria-label="Tutup menu">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="sidebar-scroll">
+        <div class="sidebar-group">
+          <div class="sidebar-group-title">Daftar pintar</div>
+          <button type="button" class="sidebar-item active" data-smart="today">
+            <span class="sidebar-item-left">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M4.93 4.93l1.41 1.41"/><path d="M17.66 17.66l1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/></svg>
+              <span>Hari ini</span>
+            </span>
+            <span class="sidebar-count" id="count-smart-today">0</span>
+          </button>
+          <button type="button" class="sidebar-item" data-smart="next7">
+            <span class="sidebar-item-left">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span>7 hari ke depan</span>
+            </span>
+            <span class="sidebar-count" id="count-smart-next7">0</span>
+          </button>
+          <button type="button" class="sidebar-item" data-smart="all">
+            <span class="sidebar-item-left">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              <span>Semua tugas</span>
+            </span>
+            <span class="sidebar-count" id="count-smart-all">0</span>
+          </button>
+          <button type="button" class="sidebar-item" data-smart="memory">
+            <span class="sidebar-item-left">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              <span>Memory Curve</span>
+            </span>
+            <span class="sidebar-count" id="count-smart-memory">0</span>
+          </button>
+        </div>
+
+        <div class="sidebar-group">
+          <div class="sidebar-group-head">
+            <span class="sidebar-group-title">Kategori list</span>
+          </div>
+          <div id="sidebar-lists-container"></div>
+        </div>
+
+        <div class="sidebar-group">
+          <div class="sidebar-group-head">
+            <span class="sidebar-group-title">Mata kuliah</span>
+            <button type="button" class="sidebar-add-btn" id="btn-sidebar-add-course" title="Tambah mata kuliah">+</button>
+          </div>
+          <div id="sidebar-courses-container"></div>
+        </div>
+
+        <div class="sidebar-group">
+          <div class="sidebar-group-title">Tag</div>
+          <div id="sidebar-tags-container" class="sidebar-tags-wrap"></div>
+        </div>
+
+        <div class="sidebar-group">
+          <div class="sidebar-group-title">Arsip</div>
+          <button type="button" class="sidebar-item" data-smart="completed">
+            <span class="sidebar-item-left">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Selesai</span>
+            </span>
+            <span class="sidebar-count" id="count-smart-completed">0</span>
+          </button>
+          <button type="button" class="sidebar-item" data-smart="wont_do">
+            <span class="sidebar-item-left">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              <span>Dibatalkan</span>
+            </span>
+            <span class="sidebar-count" id="count-smart-wontdo">0</span>
+          </button>
         </div>
       </div>
-      <div class="header-ticker-row">
-        <span id="header-date-label">MEMUAT TANGGAL...</span>
-        <span class="ticker-status" id="header-ticker-status">MEMUAT STATUS...</span>
+
+      <div class="sidebar-mini-pomo" id="sidebar-mini-pomo">
+        <div class="mini-pomo-meta">
+          <span class="mini-pomo-label" id="mini-pomo-label">PomoFlow siap</span>
+          <code class="mini-pomo-clock" id="mini-pomo-clock">25:00</code>
+        </div>
+        <button type="button" class="mini-pomo-btn" id="btn-mini-pomo-toggle">Buka</button>
       </div>
-    </header>
+    </aside>
 
-    <!-- Main Content Area -->
-    <main id="main-content" class="main-content">
-      
-      <!-- TAB 1: TODAY (HARI INI) -->
-      <section id="tab-today" class="tab-pane active">
-        <!-- Now / Next Class Glance Box -->
-        <div id="today-glance-slot">
-          <!-- Injected by app.js -->
-        </div>
-
-        <!-- Section: Timeline Kuliah Hari Ini -->
-        <div class="section-block">
-          <div class="section-headline">
-            <span class="section-label" id="today-timeline-label">01 // TIMELINE KULIAH HARI INI</span>
-            <span class="section-metric" id="today-timeline-metric">0 KELAS</span>
-          </div>
-          <div id="today-timeline-track" class="timeline-track">
-            <!-- Injected by app.js -->
-          </div>
-        </div>
-
-        <!-- Section: Deadline Terdekat -->
-        <div class="section-block">
-          <div class="section-headline">
-            <span class="section-label" style="color: var(--accent-alert);">02 // DEADLINE KRITIS (&lt; 48 JAM)</span>
-            <span class="section-metric" id="today-urgent-metric">0 TUGAS</span>
-          </div>
-          <div id="today-urgent-list">
-            <!-- Injected by app.js -->
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 2: SCHEDULE (JADWAL MINGGUAN) -->
-      <section id="tab-schedule" class="tab-pane">
-        <!-- Day Selector Strip (6 Monospace Cells) -->
-        <div class="day-selector-strip" id="schedule-day-strip">
-          <button class="day-cell-btn active" data-day="1">
-            <span class="day-short-label">SEN</span>
-            <div class="day-dot-indicator"></div>
+    <!-- Right Workspace Column (Top Bar + White Inset Sheet) -->
+    <div class="workspace-column">
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <button type="button" class="icon-ghost-btn mobile-only" id="btn-open-sidebar" aria-label="Buka menu navigasi">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           </button>
-          <button class="day-cell-btn" data-day="2">
-            <span class="day-short-label">SEL</span>
-            <div class="day-dot-indicator"></div>
-          </button>
-          <button class="day-cell-btn" data-day="3">
-            <span class="day-short-label">RAB</span>
-            <div class="day-dot-indicator"></div>
-          </button>
-          <button class="day-cell-btn" data-day="4">
-            <span class="day-short-label">KAM</span>
-            <div class="day-dot-indicator"></div>
-          </button>
-          <button class="day-cell-btn" data-day="5">
-            <span class="day-short-label">JUM</span>
-            <div class="day-dot-indicator"></div>
-          </button>
-          <button class="day-cell-btn" data-day="6">
-            <span class="day-short-label">SAB</span>
-            <div class="day-dot-indicator"></div>
-          </button>
-        </div>
-
-        <!-- Schedule Section -->
-        <div class="section-block">
-          <div class="section-headline">
-            <span class="section-label" id="schedule-day-label">JADWAL KULIAH // SENIN</span>
-            <button id="btn-open-course-modal" class="action-bar-btn" style="padding: 2px 8px; font-size: 10px;">+ TAMBAH MATKUL</button>
-          </div>
-          <div id="schedule-timeline-track" class="timeline-track">
-            <!-- Injected by app.js -->
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 3: ASSIGNMENTS (TUGAS & DEADLINE) -->
-      <section id="tab-assignments" class="tab-pane">
-        <!-- Segmented Control -->
-        <div class="swiss-segmented">
-          <button class="swiss-seg-btn active" id="seg-active" data-status="active">TUGAS AKTIF (<span id="count-active">0</span>)</button>
-          <button class="swiss-seg-btn" id="seg-completed" data-status="completed">TERSELESAIKAN (<span id="count-completed">0</span>)</button>
-        </div>
-
-        <!-- Course Filter Chips -->
-        <div class="filter-bar" id="course-filter-bar">
-          <button class="tech-chip active" data-course-id="all">[SEMUA MATKUL]</button>
-          <!-- Dynamic course chips -->
-        </div>
-
-        <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
-          <button id="btn-open-task-modal" class="action-bar-btn">+ CATAT TUGAS BARU</button>
-        </div>
-
-        <!-- Dynamic Time Horizon Container -->
-        <div id="assignments-horizon-container">
-          <!-- Injected by app.js (Hari ini & Besok, Minggu Ini, Mendatang) -->
-        </div>
-      </section>
-
-      <!-- TAB 4: SETTINGS (KONFIGURASI) -->
-      <section id="tab-settings" class="tab-pane">
-        <!-- Persona Box -->
-        <div class="settings-box">
-          <div class="settings-box-header">IDENTITAS MAHASISWA // SUBJEK</div>
-          <div class="kv-row">
-            <span class="kv-key">NAMA PENGGUNA</span>
-            <span class="kv-val">Rani (20 Tahun)</span>
-          </div>
-          <div class="kv-row">
-            <span class="kv-key">STATUS AKADEMIK</span>
-            <span class="kv-val">Semester 3 • Teknik / SI</span>
-          </div>
-          <div class="kv-row">
-            <span class="kv-key">BEBAN STUDI</span>
-            <span class="kv-val" id="stat-total-courses">7 Mata Kuliah</span>
+          <div class="breadcrumb-wrap">
+            <span class="breadcrumb-root">luang.in</span>
+            <span class="breadcrumb-sep">/</span>
+            <span class="breadcrumb-current" id="topbar-context-label">Hari ini</span>
           </div>
         </div>
 
-        <!-- Cloud & Security Settings Box -->
-        <div class="settings-box">
-          <div class="settings-box-header">KEAMANAN &amp; SINKRONISASI CLOUD</div>
-          <div class="kv-row">
-            <span class="kv-key">INFRASTRUKTUR 24/7</span>
-            <span class="kv-val" style="color: var(--accent-success);">Vercel Serverless</span>
-          </div>
-          <div class="kv-row">
-            <span class="kv-key">DATABASE</span>
-            <span class="kv-val">Upstash Redis KV (Cloud)</span>
-          </div>
-          <div class="kv-row">
-            <span class="kv-key">STATUS PIN</span>
-            <span class="kv-val" style="color: var(--accent-alert);">AKTIF (4-DIGIT)</span>
-          </div>
-          <div style="margin-top: 10px;">
-            <button id="btn-lock-now" class="action-bar-btn" style="width: 100%;">
-              🔒 KUNCI APLIKASI SEKARANG (LOCK PIN)
-            </button>
-          </div>
-        </div>
+        <button type="button" class="topbar-search-trigger" id="btn-open-command">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span class="search-placeholder">Cari tugas atau tambah cepat dengan bahasa alami...</span>
+          <kbd class="kbd-hint">⌘K</kbd>
+        </button>
 
-        <!-- Metrics Box -->
-        <div class="settings-box">
-          <div class="settings-box-header">STATUS DATABASE LOKAL</div>
-          <div class="kv-row">
-            <span class="kv-key">TUGAS BELUM SELESAI</span>
-            <span class="kv-val" style="color: var(--accent-alert);" id="stat-active-tasks">0</span>
-          </div>
-          <div class="kv-row">
-            <span class="kv-key">TUGAS SELESAI DIARSIP</span>
-            <span class="kv-val" style="color: var(--accent-success);" id="stat-completed-tasks">0</span>
-          </div>
+        <div class="top-bar-right">
+          <span id="cloud-sync-status" class="sync-pill">Tersinkron</span>
+          <span id="live-clock" class="topbar-clock">--:--</span>
+          <button type="button" class="btn-primary-sm" id="btn-quick-new-task">+ Tugas</button>
         </div>
+      </header>
 
-        <!-- Management Actions -->
-        <div class="settings-box">
-          <div class="settings-box-header">TINDAKAN MANAJEMEN DATA</div>
-          <button id="btn-reset-sample" class="action-bar-btn" style="width: 100%; margin-bottom: 8px;">
-            ↺ MUAT ULANG DATA SAMPEL RANI
-          </button>
-          <button id="btn-clear-data" class="action-bar-btn" style="width: 100%; border-color: var(--accent-alert); color: var(--accent-alert);">
-            ✕ KOSONGKAN SELURUH DATA LOKAL
-          </button>
+      <!-- White Inset Sheet -->
+      <div class="main-sheet">
+        <div class="sheet-layout">
+          <main id="sheet-main" class="sheet-main">
+            <!-- MODULE 1: TASKS & TODAY COMMAND CENTER -->
+            <section id="view-tasks" class="module-view active">
+              <div class="page-head-row">
+                <div>
+                  <h1 class="page-title" id="tasks-view-title">Hari ini</h1>
+                  <p class="page-finding" id="tasks-view-finding">Memuat ringkasan kelas dan tenggat hari ini...</p>
+                </div>
+                <div class="page-head-actions">
+                  <div class="segmented-tabs" id="tasks-view-mode-tabs" role="tablist">
+                    <button type="button" class="seg-tab active" data-viewmode="list">Daftar</button>
+                    <button type="button" class="seg-tab" data-viewmode="kanban">Kanban</button>
+                    <button type="button" class="seg-tab" data-viewmode="timeline">Timeline</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Signature Element: Interactive Time-Gap Ribbon (Smart Gap) -->
+              <div class="time-gap-panel" id="today-time-gap-panel"></div>
+
+              <!-- Pinned Countdowns Strip (if any) -->
+              <div id="pinned-countdowns-strip" class="pinned-countdowns-strip"></div>
+
+              <!-- Smart NLP Quick-Add Bar -->
+              <div class="nlp-composer-card">
+                <form id="form-nlp-quick-add" class="nlp-form" autocomplete="off">
+                  <svg class="nlp-plus-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <input type="text" id="nlp-task-input" class="nlp-input" placeholder="Tambah tugas cepat: misal &quot;Review ERD besok 19:00 @IF2102 !tinggi ~2p !memory&quot;">
+                  <button type="button" class="btn-ghost-sm" id="btn-open-task-modal">Form lengkap</button>
+                  <button type="submit" class="btn-accent-sm">Tambah</button>
+                </form>
+                <div id="nlp-preview-tokens" class="nlp-preview-tokens"></div>
+              </div>
+
+              <!-- Multi-View Container (List / Kanban / Timeline) -->
+              <div id="tasks-content-container"></div>
+            </section>
+
+            <!-- MODULE 2: CALENDAR & TIMETABLE -->
+            <section id="view-calendar" class="module-view">
+              <div class="page-head-row">
+                <div>
+                  <h1 class="page-title">Kalender &amp; Jadwal Kuliah</h1>
+                  <p class="page-finding" id="calendar-view-finding">Jadwal kuliah mingguan dan blok waktu eksekusi tugas.</p>
+                </div>
+                <div class="page-head-actions">
+                  <div class="segmented-tabs" id="calendar-mode-tabs">
+                    <button type="button" class="seg-tab active" data-calmode="daily">Time-Block Harian</button>
+                    <button type="button" class="seg-tab" data-calmode="weekly">Matriks Kuliah</button>
+                    <button type="button" class="seg-tab" data-calmode="month">Bulanan</button>
+                  </div>
+                  <button type="button" class="btn-primary-sm" id="btn-open-course-modal">+ Mata kuliah</button>
+                </div>
+              </div>
+              <div id="calendar-content-container"></div>
+            </section>
+
+            <!-- MODULE 3: EISENHOWER PRIORITY MATRIX -->
+            <section id="view-matrix" class="module-view">
+              <div class="page-head-row">
+                <div>
+                  <h1 class="page-title">Matriks Prioritas Eisenhower</h1>
+                  <p class="page-finding" id="matrix-view-finding">Pemetaan otomatis seluruh tugas aktif berdasarkan tingkat kepentingan dan urgensi tenggat.</p>
+                </div>
+              </div>
+              <div id="matrix-content-container" class="eisenhower-grid"></div>
+            </section>
+
+            <!-- MODULE 4: POMOFLOW STUDIO -->
+            <section id="view-focus" class="module-view">
+              <div class="page-head-row">
+                <div>
+                  <h1 class="page-title">PomoFlow Studio</h1>
+                  <p class="page-finding" id="focus-view-finding">Timer fokus terikat tugas atau mata kuliah dengan pembangkit suara ambient bawaan.</p>
+                </div>
+              </div>
+              <div id="focus-content-container"></div>
+            </section>
+
+            <!-- MODULE 5: STREAK-SAFE HABIT TRACKER -->
+            <section id="view-habits" class="module-view">
+              <div class="page-head-row">
+                <div>
+                  <h1 class="page-title">Habit Tracker</h1>
+                  <p class="page-finding" id="habits-view-finding">Bangun rutinitas pagi, siang, dan malam dengan fitur Izin/Skip tanpa memutus streak.</p>
+                </div>
+                <div class="page-head-actions">
+                  <button type="button" class="btn-primary-sm" id="btn-open-habit-modal">+ Kebiasaan baru</button>
+                </div>
+              </div>
+              <div id="habits-content-container"></div>
+            </section>
+
+            <!-- MODULE 6: COUNTDOWN & MOMENTUM INSIGHTS -->
+            <section id="view-insights" class="module-view">
+              <div class="page-head-row">
+                <div>
+                  <h1 class="page-title">Countdown &amp; Momentum</h1>
+                  <p class="page-finding" id="insights-view-finding">Pantau hitung mundur ujian, skor produktivitas Lv. 1-12, dan distribusi jam fokus.</p>
+                </div>
+                <div class="page-head-actions">
+                  <button type="button" class="btn-primary-sm" id="btn-open-countdown-modal">+ Countdown</button>
+                </div>
+              </div>
+              <div id="insights-content-container"></div>
+            </section>
+
+            <!-- MODULE 7: SETTINGS -->
+            <section id="view-settings" class="module-view">
+              <div class="page-head-row">
+                <div>
+                  <h1 class="page-title">Pengaturan ruang kerja</h1>
+                  <p class="page-finding">Sesuaikan profil pribadi, tema warna ala TickTick, durasi PomoFlow, dan sinkronisasi data.</p>
+                </div>
+              </div>
+              <div id="settings-content-container"></div>
+            </section>
+          </main>
+
+          <!-- Right Task Detail Inspector Drawer -->
+          <aside id="detail-inspector" class="detail-inspector hidden" aria-label="Detail tugas">
+            <div id="detail-inspector-body" class="detail-inspector-body"></div>
+          </aside>
         </div>
-      </section>
-      
-    </main>
+      </div>
+    </div>
 
-    <!-- Bottom Navigation Bar (4-Grid Monospace) -->
-    <nav class="bottom-nav-bar">
-      <button class="nav-tab-btn active" data-tab="tab-today">
-        <span class="nav-tab-label">TODAY</span>
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-bottom-nav" aria-label="Navigasi cepat ponsel">
+      <button type="button" class="mobile-nav-btn active" data-module="tasks">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <span>Tugas</span>
       </button>
-      <button class="nav-tab-btn" data-tab="tab-schedule">
-        <span class="nav-tab-label">JADWAL</span>
+      <button type="button" class="mobile-nav-btn" data-module="calendar">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Jadwal</span>
       </button>
-      <button class="nav-tab-btn" data-tab="tab-assignments">
-        <span class="nav-tab-label">TUGAS</span>
+      <button type="button" class="mobile-nav-btn" data-module="focus">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5"/></svg>
+        <span>Pomo</span>
       </button>
-      <button class="nav-tab-btn" data-tab="tab-settings">
-        <span class="nav-tab-label">CONFIG</span>
+      <button type="button" class="mobile-nav-btn" data-module="matrix">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>
+        <span>Matriks</span>
+      </button>
+      <button type="button" class="mobile-nav-btn" data-module="habits">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+        <span>Habit</span>
       </button>
     </nav>
-    
   </div>
 
-  <!-- MODAL: CATAT TUGAS BARU -->
-  <div id="modal-task" class="modal-overlay">
+  <!-- MODAL: COMMAND PALETTE (Cmd/Ctrl+K) -->
+  <div id="modal-command" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="cmd-modal-title">
+    <div class="modal-card modal-card-md">
+      <div class="modal-header">
+        <h3 id="cmd-modal-title" class="modal-title">Pencarian cepat &amp; perintah NLP</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-command" aria-label="Tutup"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="form-group">
+        <input type="text" id="command-palette-input" class="form-input" placeholder="Ketik kata kunci untuk mencari tugas/matkul atau ketik tugas baru...">
+      </div>
+      <div id="command-palette-results" class="command-results-list"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: TAMBAH TUGAS LENGKAP -->
+  <div id="modal-task" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="task-modal-title">
     <div class="modal-card">
       <div class="modal-header">
-        <h3 class="modal-title">+ CATAT TUGAS BARU</h3>
-        <button class="modal-close-btn" id="btn-close-task-modal">✕</button>
+        <h3 id="task-modal-title" class="modal-title">Tambah tugas baru</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-task" aria-label="Tutup"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <form id="form-add-task">
         <div class="form-group">
-          <label class="form-label">MATA KULIAH TERKAIT *</label>
-          <select id="task-course-select" class="form-input" required>
-            <!-- Injected by app.js -->
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">JUDUL TUGAS / PROYEK *</label>
+          <label class="form-label" for="task-title-input">Judul tugas</label>
           <input type="text" id="task-title-input" class="form-input" placeholder="misal: Implementasi B-Tree C++" required>
         </div>
 
         <div class="form-row">
           <div class="form-group flex-1">
-            <label class="form-label">TANGGAL DEADLINE *</label>
+            <label class="form-label" for="task-list-select">Kategori list</label>
+            <select id="task-list-select" class="form-input">
+              <option value="kuliah">Kuliah</option>
+              <option value="organisasi">Organisasi</option>
+              <option value="pribadi">Pribadi</option>
+              <option value="inbox">Inbox</option>
+            </select>
+          </div>
+          <div class="form-group flex-1">
+            <label class="form-label" for="task-course-select">Mata kuliah (opsional)</label>
+            <select id="task-course-select" class="form-input"></select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label class="form-label" for="task-date-input">Tanggal deadline</label>
             <input type="date" id="task-date-input" class="form-input" required>
           </div>
           <div class="form-group flex-1">
-            <label class="form-label">JAM DEADLINE *</label>
-            <input type="time" id="task-time-input" class="form-input" value="23:59" required>
+            <label class="form-label" for="task-time-input">Jam deadline</label>
+            <input type="time" id="task-time-input" class="form-input" value="21:00" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label class="form-label" for="task-priority-select">Prioritas</label>
+            <select id="task-priority-select" class="form-input">
+              <option value="5">Tinggi (P1)</option>
+              <option value="3" selected>Sedang (P2)</option>
+              <option value="1">Rendah (P3)</option>
+              <option value="0">Tanpa prioritas</option>
+            </select>
+          </div>
+          <div class="form-group flex-1">
+            <label class="form-label" for="task-repeat-select">Pengulangan</label>
+            <select id="task-repeat-select" class="form-input">
+              <option value="none">Sekali saja</option>
+              <option value="daily">Harian</option>
+              <option value="weekly">Mingguan</option>
+              <option value="monthly">Bulanan</option>
+              <option value="ebbinghaus">Memory Curve (1-2-4-7-15)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label class="form-label" for="task-pomos-input">Estimasi Pomodoro</label>
+            <input type="number" id="task-pomos-input" class="form-input" min="1" max="12" value="2">
+          </div>
+          <div class="form-group flex-1">
+            <label class="form-label" for="task-tags-input">Tag (pisah koma)</label>
+            <input type="text" id="task-tags-input" class="form-input" placeholder="praktikum, uts">
           </div>
         </div>
 
         <div class="form-group">
-          <label class="form-label">TINGKAT PRIORITAS</label>
-          <select id="task-priority-select" class="form-input">
-            <option value="Rendah">Rendah (Penyelesaian Fleksibel)</option>
-            <option value="Sedang" selected>Sedang (Tugas Rutin Kuliah)</option>
-            <option value="Tinggi">Tinggi (Ujian / Proyek Besar)</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">CATATAN &amp; FORMAT PENGUMPULAN (OPSIONAL)</label>
-          <textarea id="task-notes-input" class="form-input form-textarea" rows="2" placeholder="Tulis instruksi pengumpulan atau catatan dosen..."></textarea>
+          <label class="form-label" for="task-notes-input">Catatan (opsional)</label>
+          <textarea id="task-notes-input" class="form-input form-textarea" rows="2" placeholder="Instruksi pengumpulan atau tautan referensi..."></textarea>
         </div>
 
         <div class="btn-row">
-          <button type="button" class="tech-btn tech-btn-ghost" id="btn-cancel-task">BATAL</button>
-          <button type="submit" class="tech-btn tech-btn-primary">SIMPAN TUGAS</button>
+          <button type="button" class="btn-secondary" data-close-modal="modal-task">Batal</button>
+          <button type="submit" class="btn-primary">Simpan tugas</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- MODAL: TAMBAH MATA KULIAH -->
-  <div id="modal-course" class="modal-overlay">
+  <!-- MODAL: TAMBAH / EDIT MATA KULIAH -->
+  <div id="modal-course" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="course-modal-title">
     <div class="modal-card">
       <div class="modal-header">
-        <h3 class="modal-title">+ TAMBAH MATA KULIAH</h3>
-        <button class="modal-close-btn" id="btn-close-course-modal">✕</button>
+        <h3 id="course-modal-title" class="modal-title">Tambah mata kuliah</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-course" aria-label="Tutup"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <form id="form-add-course">
+        <input type="hidden" id="course-edit-id" value="">
         <div class="form-group">
-          <label class="form-label">NAMA MATA KULIAH *</label>
-          <input type="text" id="course-name-input" class="form-input" placeholder="misal: Sistem Operasi &amp; Jaringan" required>
+          <label class="form-label" for="course-name-input">Nama mata kuliah</label>
+          <input type="text" id="course-name-input" class="form-input" placeholder="misal: Sistem Operasi" required>
         </div>
 
         <div class="form-row">
           <div class="form-group flex-1">
-            <label class="form-label">KODE MATKUL</label>
+            <label class="form-label" for="course-code-input">Kode matkul</label>
             <input type="text" id="course-code-input" class="form-input" placeholder="IF2204">
           </div>
           <div class="form-group flex-1">
-            <label class="form-label">HARI KULIAH</label>
+            <label class="form-label" for="course-credits-input">SKS</label>
+            <input type="number" id="course-credits-input" class="form-input" min="1" max="6" value="3">
+          </div>
+          <div class="form-group flex-1">
+            <label class="form-label" for="course-day-select">Hari</label>
             <select id="course-day-select" class="form-input">
               <option value="1">Senin</option>
               <option value="2">Selasa</option>
@@ -343,47 +534,168 @@
 
         <div class="form-row">
           <div class="form-group flex-1">
-            <label class="form-label">JAM MULAI</label>
+            <label class="form-label" for="course-start-input">Jam mulai</label>
             <input type="time" id="course-start-input" class="form-input" value="08:00" required>
           </div>
           <div class="form-group flex-1">
-            <label class="form-label">JAM SELESAI</label>
+            <label class="form-label" for="course-end-input">Jam selesai</label>
             <input type="time" id="course-end-input" class="form-input" value="10:30" required>
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-group flex-1">
-            <label class="form-label">RUANGAN / GEDUNG</label>
+            <label class="form-label" for="course-room-input">Ruangan / Lab</label>
             <input type="text" id="course-room-input" class="form-input" placeholder="Lab Komputer 3">
           </div>
           <div class="form-group flex-1">
-            <label class="form-label">DOSEN PENGAMPU</label>
-            <input type="text" id="course-lecturer-input" class="form-input" placeholder="Prof. Bambang">
+            <label class="form-label" for="course-lecturer-input">Dosen pengampu</label>
+            <input type="text" id="course-lecturer-input" class="form-input" placeholder="Dr. Bambang">
           </div>
         </div>
 
         <div class="form-group">
-          <label class="form-label">AKSEN WARNA INDIKATOR</label>
+          <label class="form-label" for="course-color-select">Warna penanda</label>
           <select id="course-color-select" class="form-input">
-            <option value="1E3A8A">Deep Navy Blue</option>
-            <option value="0284C7">Sky Technical Blue</option>
-            <option value="059669">Emerald Lab Green</option>
-            <option value="D97706">Amber Warning Gold</option>
-            <option value="7C3AED">Violet Purple</option>
-            <option value="DC2626">Crimson Red</option>
+            <option value="4772FA">Classic Blue</option>
+            <option value="0284C7">Sky Blue</option>
+            <option value="247B50">Matcha Green</option>
+            <option value="D97706">Amber Gold</option>
+            <option value="0F766E">Deep Teal</option>
+            <option value="C4242A">Signal Red</option>
             <option value="475569">Neutral Slate</option>
           </select>
         </div>
 
         <div class="btn-row">
-          <button type="button" class="tech-btn tech-btn-ghost" id="btn-cancel-course">BATAL</button>
-          <button type="submit" class="tech-btn tech-btn-primary">SIMPAN MATA KULIAH</button>
+          <button type="button" class="btn-secondary" data-close-modal="modal-course">Batal</button>
+          <button type="submit" class="btn-primary">Simpan mata kuliah</button>
         </div>
       </form>
     </div>
   </div>
 
-  <script src="app.js?v=3"></script>
+  <!-- MODAL: TAMBAH KEBIASAAN (HABIT) -->
+  <div id="modal-habit" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="habit-modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="habit-modal-title" class="modal-title">Buat kebiasaan baru</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-habit" aria-label="Tutup"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <form id="form-add-habit">
+        <div class="form-group">
+          <label class="form-label" for="habit-name-input">Nama kebiasaan</label>
+          <input type="text" id="habit-name-input" class="form-input" placeholder="misal: Latihan soal algoritma" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label class="form-label" for="habit-section-select">Waktu rutin</label>
+            <select id="habit-section-select" class="form-input">
+              <option value="pagi">Pagi</option>
+              <option value="siang">Siang</option>
+              <option value="malam">Malam</option>
+            </select>
+          </div>
+          <div class="form-group flex-1">
+            <label class="form-label" for="habit-type-select">Mode hitung</label>
+            <select id="habit-type-select" class="form-input">
+              <option value="boolean">Centang sekali</option>
+              <option value="counter">Target angka</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label class="form-label" for="habit-goal-input">Target harian</label>
+            <input type="number" id="habit-goal-input" class="form-input" min="1" value="1">
+          </div>
+          <div class="form-group flex-1">
+            <label class="form-label" for="habit-unit-input">Satuan</label>
+            <input type="text" id="habit-unit-input" class="form-input" value="kali" placeholder="menit / gelas / halaman">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="habit-encouragement-input">Catatan pengingat diri</label>
+          <input type="text" id="habit-encouragement-input" class="form-input" placeholder="Kalimat pendorong saat melihat kebiasaan ini...">
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn-secondary" data-close-modal="modal-habit">Batal</button>
+          <button type="submit" class="btn-primary">Simpan kebiasaan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: TAMBAH COUNTDOWN -->
+  <div id="modal-countdown" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="countdown-modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="countdown-modal-title" class="modal-title">Tambah countdown Hari-H</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-countdown" aria-label="Tutup"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <form id="form-add-countdown">
+        <div class="form-group">
+          <label class="form-label" for="countdown-title-input">Nama agenda / ujian</label>
+          <input type="text" id="countdown-title-input" class="form-input" placeholder="misal: UAS Sistem Basis Data" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label class="form-label" for="countdown-date-input">Tanggal target</label>
+            <input type="date" id="countdown-date-input" class="form-input" required>
+          </div>
+          <div class="form-group flex-1">
+            <label class="form-label" for="countdown-category-select">Kategori</label>
+            <select id="countdown-category-select" class="form-input">
+              <option value="UTS">UTS</option>
+              <option value="UAS">UAS</option>
+              <option value="Proyek">Proyek</option>
+              <option value="Event">Event</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="checkbox-inline-row">
+            <input type="checkbox" id="countdown-pinned-input" checked>
+            <span>Sematkan di bagian atas daftar tugas Hari ini</span>
+          </label>
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn-secondary" data-close-modal="modal-countdown">Batal</button>
+          <button type="submit" class="btn-primary">Simpan countdown</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: TIME-BLOCK SCHEDULE PICKER -->
+  <div id="modal-timeblock" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="timeblock-modal-title">
+    <div class="modal-card modal-card-sm">
+      <div class="modal-header">
+        <h3 id="timeblock-modal-title" class="modal-title">Jadwalkan tugas ke sela waktu</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-timeblock" aria-label="Tutup"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <form id="form-timeblock">
+        <input type="hidden" id="tb-start-iso">
+        <input type="hidden" id="tb-end-iso">
+        <p class="form-hint-text" id="tb-slot-summary"></p>
+        <div class="form-group">
+          <label class="form-label" for="tb-task-select">Pilih tugas yang dikerjakan</label>
+          <select id="tb-task-select" class="form-input" required></select>
+        </div>
+        <div class="form-group">
+          <label class="checkbox-inline-row">
+            <input type="checkbox" id="tb-start-pomo-check" checked>
+            <span>Langsung buka PomoFlow Studio setelah dijadwalkan</span>
+          </label>
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn-secondary" data-close-modal="modal-timeblock">Batal</button>
+          <button type="submit" class="btn-primary">Terapkan ke jadwal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js?v=5"></script>
 </body>
 </html>

@@ -1,95 +1,175 @@
 import SwiftUI
 
 public struct AddCourseSheet: View {
-    @Environment(\.presentationMode) var presentationMode
-    @EnvironmentObject var store: ScheduleStore
-    
+    @EnvironmentObject private var store: ScheduleStore
+    @Environment(\.dismiss) private var dismiss
+
+    public var courseToEdit: Course?
+
     @State private var name: String = ""
     @State private var code: String = ""
     @State private var lecturer: String = ""
     @State private var room: String = ""
-    @State private var selectedDay: DayOfWeek = .monday
-    @State private var startTime: Date = Date()
-    @State private var endTime: Date = Date().addingTimeInterval(7200) // +2 hours
-    @State private var selectedColorHex: String = "1E3A8A"
-    
-    private var isFormValid: Bool {
-        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    @State private var credits: Int = 3
+    @State private var dayOfWeek: DayOfWeek = .monday
+    @State private var startTimeDate: Date = Self.dateFrom(minutes: 8 * 60)
+    @State private var endTimeDate: Date = Self.dateFrom(minutes: 10 * 60)
+    @State private var colorHex: String = "4772FA"
+
+    private let palette: [String] = [
+        "4772FA", "0F766E", "247B50", "D97706", "C4242A", "0284C7", "8C5A32"
+    ]
+
+    public init(courseToEdit: Course? = nil) {
+        self.courseToEdit = courseToEdit
     }
-    
+
+    private var startMinutes: Int {
+        Self.minutesFrom(date: startTimeDate)
+    }
+
+    private var endMinutes: Int {
+        Self.minutesFrom(date: endTimeDate)
+    }
+
+    private var isTimeValid: Bool {
+        endMinutes > startMinutes
+    }
+
+    private var isFormValid: Bool {
+        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && isTimeValid
+    }
+
     public var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
-                Section(header: Text("Informasi Mata Kuliah")) {
-                    TextField("Nama Mata Kuliah (misal: Algoritma)", text: $name)
-                    TextField("Kode Matkul (misal: IF2101)", text: $code)
-                    TextField("Nama Dosen Pengampu", text: $lecturer)
-                    TextField("Ruangan / Lab (misal: R.304)", text: $room)
+                Section("Identitas Mata Kuliah") {
+                    TextField("Nama Mata Kuliah (cth: Algoritma)", text: $name)
+                    HStack {
+                        TextField("Kode (cth: IF2110)", text: $code)
+                            .textInputAutocapitalization(.characters)
+                        Divider()
+                        Stepper("\(credits) SKS", value: $credits, in: 1...6)
+                    }
+                    TextField("Dosen Pengampu", text: $lecturer)
+                    TextField("Ruangan / Link Kelas", text: $room)
                 }
-                
-                Section(header: Text("Waktu Perkuliahan")) {
-                    Picker("Hari Kuliah", selection: $selectedDay) {
+
+                Section("Jadwal & Waktu") {
+                    Picker("Hari", selection: $dayOfWeek) {
                         ForEach(DayOfWeek.allCases) { day in
                             Text(day.localizedName).tag(day)
                         }
                     }
-                    
-                    DatePicker("Jam Mulai", selection: $startTime, displayedComponents: .hourAndMinute)
-                    DatePicker("Jam Selesai", selection: $endTime, displayedComponents: .hourAndMinute)
+
+                    DatePicker("Jam Mulai", selection: $startTimeDate, displayedComponents: .hourAndMinute)
+                    DatePicker("Jam Selesai", selection: $endTimeDate, displayedComponents: .hourAndMinute)
+
+                    if !isTimeValid {
+                        Label("Jam selesai harus lebih lambat dari jam mulai.", systemImage: "exclamationmark.triangle.fill")
+                            .font(AppFont.caption())
+                            .foregroundColor(Theme.signalRed)
+                    }
                 }
-                
-                Section(header: Text("Warna Penanda")) {
-                    HStack(spacing: 12) {
-                        ForEach(Course.presetColors, id: \.self) { colorHex in
-                            ZStack {
+
+                Section("Warna Identitas") {
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 12) {
+                        ForEach(palette, id: \.self) { hex in
+                            Button {
+                                colorHex = hex
+                            } label: {
                                 Circle()
-                                    .fill(Color(hex: colorHex))
-                                    .frame(width: 32, height: 32)
-                                
-                                if selectedColorHex == colorHex {
-                                    Circle()
-                                        .stroke(Color.white, lineWidth: 2)
-                                        .frame(width: 24, height: 24)
-                                }
+                                    .fill(Color(hex: hex))
+                                    .frame(width: 30, height: 30)
+                                    .overlay(
+                                        Circle()
+                                            .stroke(Theme.inkPrimary, lineWidth: colorHex == hex ? 2.5 : 0)
+                                            .padding(-3)
+                                    )
                             }
-                            .onTapGesture {
-                                selectedColorHex = colorHex
-                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Warna \(hex)")
                         }
                     }
                     .padding(.vertical, 6)
                 }
             }
-            .navigationTitle("Tambah Mata Kuliah")
+            .navigationTitle(courseToEdit == nil ? "Tambah Mata Kuliah" : "Edit Mata Kuliah")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Batal") {
-                        presentationMode.wrappedValue.dismiss()
-                    }
+                    Button("Batal") { dismiss() }
                 }
-                
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Simpan") {
-                        let formatter = DateFormatter()
-                        formatter.dateFormat = "HH:mm"
-                        
-                        let newCourse = Course(
-                            name: name.trimmingCharacters(in: .whitespacesAndNewlines),
-                            code: code.trimmingCharacters(in: .whitespacesAndNewlines),
-                            lecturer: lecturer.trimmingCharacters(in: .whitespacesAndNewlines),
-                            room: room.trimmingCharacters(in: .whitespacesAndNewlines),
-                            dayOfWeek: selectedDay,
-                            startTime: formatter.string(from: startTime),
-                            endTime: formatter.string(from: endTime),
-                            colorHex: selectedColorHex
-                        )
-                        store.addCourse(newCourse)
-                        presentationMode.wrappedValue.dismiss()
+                        saveCourse()
                     }
                     .disabled(!isFormValid)
+                    .fontWeight(.semibold)
                 }
             }
+            .onAppear(perform: populateInitialValues)
         }
+    }
+
+    private func populateInitialValues() {
+        guard let course = courseToEdit else { return }
+        name = course.name
+        code = course.code
+        lecturer = course.lecturer
+        room = course.room
+        credits = course.credits
+        dayOfWeek = course.dayOfWeek
+        startTimeDate = Self.dateFrom(minutes: Course.parseMinutes(course.startTime))
+        endTimeDate = Self.dateFrom(minutes: Course.parseMinutes(course.endTime))
+        colorHex = course.colorHex
+    }
+
+    private func saveCourse() {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty, isTimeValid else { return }
+
+        let startStr = SmartGapSlot.formatMinutes(startMinutes)
+        let endStr = SmartGapSlot.formatMinutes(endMinutes)
+
+        if let existing = courseToEdit {
+            let updated = Course(
+                id: existing.id,
+                name: trimmedName,
+                code: code.trimmingCharacters(in: .whitespacesAndNewlines).uppercased(),
+                lecturer: lecturer.trimmingCharacters(in: .whitespacesAndNewlines),
+                room: room.trimmingCharacters(in: .whitespacesAndNewlines),
+                credits: credits,
+                dayOfWeek: dayOfWeek,
+                startTime: startStr,
+                endTime: endStr,
+                colorHex: colorHex
+            )
+            store.updateCourse(updated)
+        } else {
+            let newCourse = Course(
+                name: trimmedName,
+                code: code.trimmingCharacters(in: .whitespacesAndNewlines).uppercased(),
+                lecturer: lecturer.trimmingCharacters(in: .whitespacesAndNewlines),
+                room: room.trimmingCharacters(in: .whitespacesAndNewlines),
+                credits: credits,
+                dayOfWeek: dayOfWeek,
+                startTime: startStr,
+                endTime: endStr,
+                colorHex: colorHex
+            )
+            store.addCourse(newCourse)
+        }
+        dismiss()
+    }
+
+    private static func minutesFrom(date: Date) -> Int {
+        let comps = Calendar.current.dateComponents([.hour, .minute], from: date)
+        return (comps.hour ?? 0) * 60 + (comps.minute ?? 0)
+    }
+
+    private static func dateFrom(minutes: Int) -> Date {
+        let cal = Calendar.current
+        return cal.date(bySettingHour: minutes / 60, minute: minutes % 60, second: 0, of: Date()) ?? Date()
     }
 }

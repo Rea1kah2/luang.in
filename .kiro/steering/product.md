@@ -1,59 +1,34 @@
-# Product: Jadwal-In
+# Product: luang.in
 
 ## 1. Product Discovery & Problem Framing
 
 ### A. Observasi & Pain Points Lapangan
-1. **Pain Point Berulang:** Mahasiswa aktif rata-rata mengambil 6–8 mata kuliah per semester dengan jadwal, dosen, ruangan, dan deadline tugas yang heterogen. Sering kali tugas terlewat atau dikerjakan mepet (sistem kebut semalam) akibat ketiadaan visibilitas urgensi.
-2. **Proses Manual yang Rawan Error:** Mayoritas mahasiswa mencatat deadline tugas di grup WhatsApp, sticky notes, atau aplikasi catatan umum (bawaan ponsel). Catatan ini terkubur dalam pesan chat harian dan tidak memiliki sistem pengingat kontekstual per mata kuliah.
-3. **Kesenjangan Solusi yang Ada:**
-   - *Aplikasi To-Do List Umum (Todoist, TickTick, Notion):* Terlalu banyak fitur (subtask, tags, projects, kanban) yang menimbulkan kelelahan konfigurasi (*cognitive load* tinggi).
-   - *Buku Catatan / GoodNotes:* Pasif, tidak bisa menghitung countdown sisa jam deadline, dan tidak memberi indikator urgensi visual.
+1. **Fragmentasi Alat Produktivitas:** Mahasiswa dan profesional muda aktif menggunakan 3–4 aplikasi terpisah: jadwal kuliah di foto/PDF, tugas di catatan atau to-do generik, timer Pomodoro di web terpisah, dan habit tracker di aplikasi lain.
+2. **Kebutaan Terhadap Sela Waktu (*Time-Gap Blindness*):** Aplikasi to-do populer seperti TickTick sangat kuat di manajemen tugas, matriks prioritas, dan fokus, namun tidak secara native memahami struktur *Fixed Weekly Timetable* (jadwal kuliah/rutinitas mingguan) dan jeda waktu kosong (*Free Gaps*) di antara kelas.
+3. **Retensi Belajar & Kebiasaan Rapuh:** Mahasiswa membutuhkan sistem pengulangan materi ujian (*spaced repetition*) dan pelacak kebiasaan yang tidak menghukum streak ketika sedang sakit/izin.
 
-### B. User Persona
-- **Nama Persona:** Rani, 20 tahun.
-- **Profil:** Mahasiswa Semester 3 Jurusan Teknik / Sistem Informasi, mengambil 7 mata kuliah aktif.
-- **Karakteristik & Perilaku:**
-  - Membawa iPhone ke mana-mana di kampus.
-  - Sering berpindah gedung kuliah setiap 2–3 jam.
-  - Membutuhkan jawaban instan atas 2 pertanyaan setiap saat:
-    1. *"Hari ini saya ada kelas apa saja dan di ruangan mana?"*
-    2. *"Tugas apa yang paling mendesak harus dikumpulkan dalam 24–48 jam ke depan?"*
-- **Toleransi Friction:** Nol toleransi untuk aplikasi rumit. Waktu buka aplikasi hingga tahu jadwal/tugas harus di bawah 3 detik.
+### B. Brand Identity: `luang.in`
+- **Nama Produk:** `luang.in` (evolusi dari Jadwal-In — mengatur kesibukan dan memanfaatkan setiap sela waktu luang)
+- **Tagline:** *"Bukan sekadar daftar tugas, ini taktik harianmu."* / *"Your daily execution tactics."*
+- **Positioning:** All-in-One Academic & Personal Execution OS yang menggabungkan keandalan manajemen tugas setara TickTick dengan kesadaran penuh terhadap jadwal mingguan dan sela waktu kosong.
 
-### C. Problem Statement
-> **"Mahasiswa aktif seperti Rani membutuhkan aplikasi pelacak jadwal kuliah dan deadline tugas yang terintegrasi, mudah diakses dalam < 3 detik, dan memiliki indikator visual urgensi yang jelas, karena sistem pencatatan manual sering terlupakan dan aplikasi to-do list umum terlalu kompleks untuk kebutuhan akademis harian."**
+### C. User Persona & Profil Fleksibel
+- Profil pengguna kini sepenuhnya dapat diedit (`profile.name`, `profile.role`, `profile.semester`, target fokus harian), dengan data sampel awal bertema mahasiswa Teknik/SI Semester 3 (6 mata kuliah + organisasi + pribadi).
 
 ---
 
-## 2. Definisi Cakupan MVP (Minimum Viable Product)
+## 2. Definisi Cakupan Produk (`luang.in` 2.0)
 
-Untuk mencegah *scope creep*, fitur diklasifikasikan dengan ketat:
+### 5 Signature Features (Unique Selling Value)
+1. **Smart Gap™ (Interactive Time-Gap Ribbon `07:00–22:00`):** Visualisasi proporsional jadwal kuliah tetap vs celah waktu kosong (`>= 25 menit`). Klik celah langsung menjadwalkan tugas Q1/Q2 paling cocok ke slot waktu tersebut dan membuka opsi mulai **PomoFlow™**.
+2. **Memory Curve™ (`1-2-4-7-15` Ebbinghaus Recurrence):** Mode pengulangan berbasis kurva lupa untuk tugas review/belajar (`H+1`, `H+2`, `H+4`, `H+7`, `H+15`).
+3. **PomoFlow™ Studio:** Timer Pomodoro (`25/5`, `50/10`, kustom) + Stopwatch yang terikat langsung ke `Task`, `Course`, atau `Habit`, dilengkapi **Web Audio API Synthesizer** (*Brown Noise, Soft Rain, Library Hum, Clock Tick*).
+4. **Streak-Safe Habit™:** Habit harian dalam seksi *Pagi / Siang / Malam* (boolean atau target angka), dilengkapi fitur **Izin / Skip (Streak-Safe)** agar streak tidak hangus saat berhalangan, serta log mood & catatan singkat.
+5. **Momentum Score™ (`Lv. 1–12`):** Skor produktivitas yang dihitung secara jujur dan dinamis dari baris data aktual (tugas selesai tepat waktu, menit fokus tercatat, streak habit, dikurangi penalti keterlambatan).
 
-### Tier 1 (MVP Inti - Fokus Release 1.0)
-- **Katalog Mata Kuliah:** Nama matkul, kode, dosen, ruangan, hari & jam kelas, serta kode warna pembeda.
-- **Layar Today (Hari Ini):** Menampilkan kelas hari ini sesuai hari berjalan + daftar deadline tugas mendesak.
-- **Layar Jadwal (Schedule):** Matriks jadwal mingguan (Senin s/d Sabtu).
-- **Layar Tugas (Assignments):** Daftar tugas aktif, sortir otomatis berdasarkan deadline terdekat, dan filter per mata kuliah.
-- **Urgensi Visual Cerdas:** Indikator badge warna (*Mendesak < 24 jam* [Oranye/Merah], *Mendekati < 3 hari* [Amber], *Aman* [Slate]).
-- **Penyimpanan Offline Lokal:** 100% data tersimpan di perangkat tanpa butuh login atau server luar.
-
-### Tier 2 (Post-MVP / Iterasi Berikutnya)
-- Push notifications / local notifications background alert.
-- Ekspor kalender ke format `.ics` / Apple Calendar.
-- Widget iOS Home Screen & Lock Screen.
-- Sinkronisasi CloudKit multi-device.
-
----
-
-## 3. Core Principles
-1. **Academic Context-First:** Semua tugas wajib terikat pada mata kuliah (tidak ada tugas mengambang tanpa konteks).
-2. **Instant Clarity:** Waktu tersisa tugas dihitung secara dinamis dan ditampilkan dalam format manusiawi (*"Tersisa 14 jam"*, *"Besok, 23:59"*).
-3. **Academic Modern Aesthetics:** Palet warna tenang (Navy `#0F172A`, Slate `#334155`) dengan aksen Tangerine/Amber tegas untuk urgensi tugas tanpa kesan berantakan.
-4. **Zero Account Friction:** Buka langsung pakai, tidak ada formulir pendaftaran, offline-first.
-
----
-
-## 4. KPI Sukses (Fase Evaluasi Pengguna)
-- Waktu membuka aplikasi hingga melihat deadline terdekat ≤ 3 detik.
-- Waktu membuat tugas baru ≤ 10 detik.
-- Zero data loss saat aplikasi ditutup mendadak.
+### Core Modules (TickTick-Parity)
+- **Smart NLP Quick-Add (`⌘K` / Input Bar):** Ekstraksi otomatis tanggal/jam (`besok 14:00`, `14:00-16:00`), prioritas (`!tinggi`/`!sedang`/`!rendah`), tag (`#ujian`), matkul/list (`@IF2101`/`@organisasi`), estimasi pomo (`~2p`), dan `!memory`.
+- **Multi-View Tasks:** Tampilan **List**, **Kanban Board** (4 kolom status), dan **Timeline**, lengkap dengan status 3-arah (`Active`, `Completed`, `Won't Do`), slider progres `0–100%`, checklist subtask ringan (`items[]`), dan catatan Markdown.
+- **Unified Calendar & Timetable:** Time-Block harian (`07:00–22:00`) + Arrange Unscheduled Tasks drawer, Jadwal Kuliah Mingguan (Senin–Sabtu), dan Kalender Bulanan.
+- **Eisenhower Priority Matrix (`Q1–Q4`):** 4 kuadran prioritas & urgensi interaktif.
+- **Countdown & Insights:** Pelacak Hari-H (UTS/UAS/Proyek) yang dapat disematkan + analitik fokus dan penyelesaian.

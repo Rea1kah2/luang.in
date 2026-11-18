@@ -2,32 +2,44 @@ import SwiftUI
 
 public struct MainTabView: View {
     @StateObject private var store = ScheduleStore()
-    
+    @State private var selectedTab: Int = 0
+
     public init() {}
-    
+
     public var body: some View {
-        TabView {
-            TodayView()
+        TabView(selection: $selectedTab) {
+            TodayView(onOpenPomoFlow: { selectedTab = 2 })
                 .tabItem {
-                    Label("Hari Ini", systemImage: "sun.max.fill")
+                    Label("Hari Ini", systemImage: "checklist.checked")
                 }
-            
+                .tag(0)
+
             ScheduleView()
                 .tabItem {
-                    Label("Jadwal", systemImage: "calendar")
+                    Label("Kalender", systemImage: "calendar")
                 }
-            
-            AssignmentsView()
+                .tag(1)
+
+            PomoFlowView()
                 .tabItem {
-                    Label("Tugas", systemImage: "checklist")
+                    Label("PomoFlow", systemImage: "timer")
                 }
-            
+                .tag(2)
+
+            AssignmentsView(onOpenPomoFlow: { selectedTab = 2 })
+                .tabItem {
+                    Label("Matriks & Habit", systemImage: "square.grid.2x2")
+                }
+                .tag(3)
+
             SettingsView()
                 .tabItem {
-                    Label("Pengaturan", systemImage: "gearshape")
+                    Label("Wawasan", systemImage: "chart.bar")
                 }
+                .tag(4)
         }
-        .accentColor(Theme.tangerine)
         .environmentObject(store)
+        .tint(store.selectedTheme.accentColor)
+        .preferredColorScheme(store.selectedTheme == .dark ? .dark : nil)
     }
 }

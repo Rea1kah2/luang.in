@@ -1,28 +1,45 @@
 import SwiftUI
 
 public enum Priority: String, Codable, CaseIterable, Identifiable {
+    case none = "Tanpa"
     case low = "Rendah"
     case medium = "Sedang"
     case high = "Tinggi"
-    
+
     public var id: String { rawValue }
-    
-    public var sortOrder: Int {
+
+    public var numericValue: Int {
         switch self {
-        case .high: return 3
-        case .medium: return 2
+        case .high: return 5
+        case .medium: return 3
         case .low: return 1
+        case .none: return 0
         }
     }
-    
+
+    public init(numeric: Int) {
+        switch numeric {
+        case 5: self = .high
+        case 3: self = .medium
+        case 1: self = .low
+        default: self = .none
+        }
+    }
+
+    public var sortOrder: Int {
+        numericValue
+    }
+
     public var color: Color {
         switch self {
         case .high:
-            return Color(red: 0.91, green: 0.35, blue: 0.05) // Tangerine / Deep Orange
+            return Color(hex: "C4242A") // Signal Red
         case .medium:
-            return Color(red: 0.96, green: 0.62, blue: 0.04) // Amber / Warm Yellow
+            return Color(hex: "D97706") // Amber Warning
         case .low:
-            return Color(red: 0.40, green: 0.46, blue: 0.55) // Slate
+            return Color(hex: "4772FA") // TickTick Classic Blue
+        case .none:
+            return Color(hex: "94A3B8") // Neutral Slate
         }
     }
 }

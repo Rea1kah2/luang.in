@@ -14,7 +14,7 @@ public extension Color {
         case 8:
             (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
         default:
-            (a, r, g, b) = (255, 0, 0, 0)
+            (a, r, g, b) = (255, 71, 114, 250)
         }
         self.init(
             .sRGB,
@@ -27,61 +27,79 @@ public extension Color {
 }
 
 public struct Theme {
-    // Swiss Technical Core (Monochrome High Contrast)
+    // TickTick Framed Sheet Core Palette
     public static var canvasBg: Color {
         Color(UIColor { tc in
-            tc.userInterfaceStyle == .dark ? UIColor(red: 0.04, green: 0.04, blue: 0.04, alpha: 1.0) : UIColor.white
+            tc.userInterfaceStyle == .dark
+                ? UIColor(red: 0.043, green: 0.043, blue: 0.051, alpha: 1.0) // #0B0B0D
+                : UIColor(red: 0.961, green: 0.965, blue: 0.969, alpha: 1.0) // #F5F6F7
         })
     }
-    
+
     public static var surfaceBg: Color {
         Color(UIColor { tc in
-            tc.userInterfaceStyle == .dark ? UIColor(red: 0.08, green: 0.08, blue: 0.09, alpha: 1.0) : UIColor(red: 0.98, green: 0.98, blue: 0.98, alpha: 1.0)
+            tc.userInterfaceStyle == .dark
+                ? UIColor(red: 0.078, green: 0.078, blue: 0.090, alpha: 1.0) // #141417
+                : UIColor.white
         })
     }
-    
+
     public static var subtleBg: Color {
         Color(UIColor { tc in
-            tc.userInterfaceStyle == .dark ? UIColor(red: 0.11, green: 0.11, blue: 0.13, alpha: 1.0) : UIColor(red: 0.95, green: 0.95, blue: 0.96, alpha: 1.0)
+            tc.userInterfaceStyle == .dark
+                ? UIColor(red: 0.110, green: 0.110, blue: 0.129, alpha: 1.0) // #1C1C21
+                : UIColor(red: 0.957, green: 0.965, blue: 0.973, alpha: 1.0) // #F4F6F8
         })
     }
-    
+
     public static var inkPrimary: Color {
         Color(UIColor { tc in
-            tc.userInterfaceStyle == .dark ? UIColor(white: 0.98, alpha: 1.0) : UIColor(red: 0.04, green: 0.04, blue: 0.04, alpha: 1.0)
+            tc.userInterfaceStyle == .dark
+                ? UIColor(red: 0.976, green: 0.980, blue: 0.984, alpha: 1.0) // #F9FAFB
+                : UIColor(red: 0.075, green: 0.078, blue: 0.086, alpha: 1.0) // #131416
         })
     }
-    
+
     public static var inkSecondary: Color {
         Color(UIColor { tc in
-            tc.userInterfaceStyle == .dark ? UIColor(red: 0.63, green: 0.63, blue: 0.67, alpha: 1.0) : UIColor(red: 0.32, green: 0.32, blue: 0.36, alpha: 1.0)
+            tc.userInterfaceStyle == .dark
+                ? UIColor(red: 0.631, green: 0.631, blue: 0.667, alpha: 1.0) // #A1A1AA
+                : UIColor(red: 0.365, green: 0.373, blue: 0.376, alpha: 1.0) // #5D5F60
         })
     }
-    
+
     public static var inkMuted: Color {
         Color(UIColor { tc in
-            tc.userInterfaceStyle == .dark ? UIColor(red: 0.44, green: 0.44, blue: 0.48, alpha: 1.0) : UIColor(red: 0.44, green: 0.44, blue: 0.48, alpha: 1.0)
+            tc.userInterfaceStyle == .dark
+                ? UIColor(red: 0.553, green: 0.553, blue: 0.588, alpha: 1.0)
+                : UIColor(red: 0.420, green: 0.447, blue: 0.502, alpha: 1.0) // #6B7280
         })
     }
-    
+
     public static var borderCrisp: Color {
         Color(UIColor { tc in
-            tc.userInterfaceStyle == .dark ? UIColor(white: 0.18, alpha: 1.0) : UIColor(red: 0.89, green: 0.89, blue: 0.91, alpha: 1.0)
+            tc.userInterfaceStyle == .dark
+                ? UIColor(red: 0.153, green: 0.153, blue: 0.180, alpha: 1.0) // #27272E
+                : UIColor(red: 0.910, green: 0.918, blue: 0.925, alpha: 1.0) // #E8EAEC
         })
     }
-    
-    // Data-Only Accents
-    public static let safetyOrange = Color(red: 0.92, green: 0.35, blue: 0.05) // #EA580C
-    public static let amberWarning = Color(red: 0.85, green: 0.47, blue: 0.02) // #D97706
-    public static let emeraldSuccess = Color(red: 0.09, green: 0.64, blue: 0.29) // #16A34A
-    public static let blueprintBlue = Color(red: 0.01, green: 0.52, blue: 0.78)  // #0284C7
-    
+
+    // TickTick Classic Blue & Data Accents
+    public static let classicBlue = Color(hex: "4772FA")
+    public static let classicBlueTint = Color(hex: "4772FA").opacity(0.12)
+    public static let signalRed = Color(hex: "C4242A")
+    public static let amberWarning = Color(hex: "D97706")
+    public static let matchaGreen = Color(hex: "247B50")
+
     // Compatibility Aliases
     public static var navy: Color { inkPrimary }
     public static var slate: Color { inkSecondary }
     public static var slateMuted: Color { inkMuted }
     public static var slateLight: Color { inkMuted }
-    public static var tangerine: Color { safetyOrange }
-    public static var emerald: Color { emeraldSuccess }
-    public static var crimson: Color { safetyOrange }
+    public static var safetyOrange: Color { signalRed }
+    public static var tangerine: Color { classicBlue }
+    public static var emeraldSuccess: Color { matchaGreen }
+    public static var emerald: Color { matchaGreen }
+    public static var crimson: Color { signalRed }
+    public static var blueprintBlue: Color { classicBlue }
 }

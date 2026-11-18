@@ -1,95 +1,169 @@
 import SwiftUI
 
 public struct AddAssignmentSheet: View {
-    @Environment(\.presentationMode) var presentationMode
-    @EnvironmentObject var store: ScheduleStore
-    
-    @State private var selectedCourseId: UUID? = nil
+    @EnvironmentObject private var store: ScheduleStore
+    @Environment(\.dismiss) private var dismiss
+
+    public var assignmentToEdit: Assignment?
+    public var initialCourseId: UUID?
+
     @State private var title: String = ""
-    @State private var dueDate: Date = Date().addingTimeInterval(86400 * 2) // Default +2 days
+    @State private var listId: String = "kuliah"
+    @State private var selectedCourseId: UUID? = nil
+    @State private var dueDate: Date = Date().addingTimeInterval(3600 * 24)
     @State private var priority: Priority = .medium
+    @State private var repeatRule: RecurrenceRule = .none
+    @State private var estimatedPomos: Int = 1
+    @State private var tagsText: String = ""
+    @State private var isPinned: Bool = false
     @State private var notes: String = ""
-    
-    private var isFormValid: Bool {
-        !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-        (selectedCourseId != nil || !store.courses.isEmpty)
+
+    private let listOptions: [(id: String, label: String)] = [
+        ("kuliah", "Kuliah"),
+        ("organisasi", "Organisasi"),
+        ("pribadi", "Pribadi"),
+        ("inbox", "Kotak Masuk")
+    ]
+
+    public init(assignmentToEdit: Assignment? = nil, initialCourseId: UUID? = nil) {
+        self.assignmentToEdit = assignmentToEdit
+        self.initialCourseId = initialCourseId
     }
-    
+
+    private var isFormValid: Bool {
+        !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     public var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
-                Section(header: Text("Mata Kuliah")) {
-                    if store.courses.isEmpty {
-                        Text("Belum ada mata kuliah terdaftar. Silakan tambah mata kuliah di menu Jadwal terlebih dahulu.")
-                            .font(AppFont.subheadline())
-                            .foregroundColor(Theme.crimson)
-                    } else {
-                        Picker("Pilih Mata Kuliah", selection: Binding(
-                            get: { selectedCourseId ?? store.courses.first?.id ?? UUID() },
-                            set: { selectedCourseId = $0 }
-                        )) {
-                            ForEach(store.courses) { course in
-                                HStack {
-                                    Circle()
-                                        .fill(course.accentColor)
-                                        .frame(width: 8, height: 8)
-                                    Text(course.name)
-                                }
-                                .tag(course.id)
-                            }
+                Section("Detail Tugas") {
+                    TextField("Judul tugas atau agenda...", text: $title)
+                    Picker("Daftar", selection: $listId) {
+                        ForEach(listOptions, id: \.id) { opt in
+                            Text(opt.label).tag(opt.id)
                         }
                     }
+                    Picker("Mata Kuliah (Opsional)", selection: $selectedCourseId) {
+                        Text("Tanpa Mata Kuliah").tag(UUID?.none)
+                        ForEach(store.courses) { course in
+                            let prefix = course.code.isEmpty ? "" : "\(course.code) - "
+                            Text("\(prefix)\(course.name)").tag(UUID?.some(course.id))
+                        }
+                    }
+                    Toggle("Sematkan di Atas", isOn: $isPinned)
                 }
-                
-                Section(header: Text("Detail Tugas")) {
-                    TextField("Judul Tugas (misal: Laporan Praktikum)", text: $title)
-                    
-                    DatePicker("Batas Waktu (Deadline)", selection: $dueDate, displayedComponents: [.date, .hourAndMinute])
-                    
+
+                Section("Tenggat & Prioritas") {
+                    DatePicker("Deadline", selection: $dueDate, displayedComponents: [.date, .hourAndMinute])
+
                     Picker("Prioritas", selection: $priority) {
                         ForEach(Priority.allCases) { p in
                             Text(p.rawValue).tag(p)
                         }
                     }
-                    .pickerStyle(SegmentedPickerStyle())
+                    .pickerStyle(.segmented)
                 }
-                
-                Section(header: Text("Catatan Tambahan (Opsional)")) {
-                    TextEditor(text: $notes)
-                        .frame(minHeight: 80)
+
+                Section("Repetisi & Estimasi Pomo") {
+                    Picker("Pola Pengulangan", selection: $repeatRule) {
+                        ForEach(RecurrenceRule.allCases) { rule in
+                            Text(rule.localizedLabel).tag(rule)
+                        }
+                    }
+
+                    if repeatRule == .ebbinghaus {
+                        Label(
+                            "Memory Curve™ akan menjadwalkan review otomatis H+1, H+2, H+4, H+7, dan H+15 setelah selesai.",
+                            systemImage: "brain.head.profile"
+                        )
+                        .font(AppFont.caption())
+                        .foregroundColor(Theme.classicBlue)
+                    }
+
+                    Stepper("Estimasi Fokus: \(estimatedPomos) Pomodoro (\(estimatedPomos * store.pomoDurationMinutes) mnt)",
+                            value: $estimatedPomos, in: 1...12)
+                }
+
+                Section("Tag & Catatan") {
+                    TextField("Tag (pisahkan koma, cth: praktikum, kuis)", text: $tagsText)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                    TextField("Catatan tambahan, tautan referensi, atau rubrik...", text: $notes, axis: .vertical)
+                        .lineLimit(3...6)
                 }
             }
-            .navigationTitle("Catat Tugas Baru")
+            .navigationTitle(assignmentToEdit == nil ? "Tugas Baru" : "Edit Tugas")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Batal") {
-                        presentationMode.wrappedValue.dismiss()
-                    }
+                    Button("Batal") { dismiss() }
                 }
-                
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Simpan") {
-                        let finalCourseId = selectedCourseId ?? store.courses.first?.id ?? UUID()
-                        let newAssignment = Assignment(
-                            courseId: finalCourseId,
-                            title: title.trimmingCharacters(in: .whitespacesAndNewlines),
-                            dueDate: dueDate,
-                            priority: priority,
-                            isCompleted: false,
-                            notes: notes.trimmingCharacters(in: .whitespacesAndNewlines)
-                        )
-                        store.addAssignment(newAssignment)
-                        presentationMode.wrappedValue.dismiss()
+                        saveAssignment()
                     }
                     .disabled(!isFormValid)
+                    .fontWeight(.semibold)
                 }
             }
-            .onAppear {
-                if selectedCourseId == nil {
-                    selectedCourseId = store.courses.first?.id
-                }
-            }
+            .onAppear(perform: populateInitialValues)
         }
+    }
+
+    private func populateInitialValues() {
+        if let existing = assignmentToEdit {
+            title = existing.title
+            listId = existing.listId
+            selectedCourseId = existing.courseId
+            dueDate = existing.dueDate
+            priority = existing.priority
+            repeatRule = existing.repeatRule
+            estimatedPomos = existing.estimatedPomos
+            tagsText = existing.tags.joined(separator: ", ")
+            isPinned = existing.isPinned
+            notes = existing.notes
+        } else {
+            selectedCourseId = initialCourseId
+        }
+    }
+
+    private func saveAssignment() {
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+
+        let parsedTags = tagsText
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+            .filter { !$0.isEmpty }
+
+        if var existing = assignmentToEdit {
+            existing.title = trimmed
+            existing.listId = listId
+            existing.courseId = selectedCourseId
+            existing.dueDate = dueDate
+            existing.priority = priority
+            existing.repeatRule = repeatRule
+            existing.estimatedPomos = estimatedPomos
+            existing.tags = parsedTags
+            existing.isPinned = isPinned
+            existing.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
+            store.updateAssignment(existing)
+        } else {
+            let newTask = Assignment(
+                listId: listId,
+                courseId: selectedCourseId,
+                title: trimmed,
+                dueDate: dueDate,
+                priority: priority,
+                isPinned: isPinned,
+                repeatRule: repeatRule,
+                tags: parsedTags,
+                estimatedPomos: estimatedPomos,
+                notes: notes.trimmingCharacters(in: .whitespacesAndNewlines)
+            )
+            store.addAssignment(newTask)
+        }
+        dismiss()
     }
 }

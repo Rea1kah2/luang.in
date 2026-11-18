@@ -1,4 +1,4 @@
-# Project Structure: Jadwal-In
+# Project Structure: luang.in
 
 ## 1. Directory Tree Architecture
 
@@ -15,29 +15,40 @@ jadwal-in/
 │           ├── requirements.md
 │           ├── design.md
 │           └── tasks.md
+├── api/
+│   └── data.js                  # Vercel Serverless API + Upstash Redis KV + Schema v2 migration
+├── web/
+│   ├── index.html               # TickTick Framed Sheet Web PWA shell
+│   ├── style.css                # 5 TickTick themes, Framed Sheet tokens, anti-slop rules
+│   ├── app.js                   # Store v2, Smart NLP, Gap-to-Task, Kanban, Matrix, PomoFlow, Habits, Countdown
+│   ├── manifest.json            # PWA manifest (luang.in)
+│   ├── icon.svg                 # Time-Gap Grid logo SVG
+│   ├── sw.js                    # Service Worker (luangin-v2)
+│   ├── server.py                # Local sync server (PIN strictly validated)
+│   └── jadwalin_store.json      # Local seed / persistent JSON Store v2
+├── vercel.json                  # Vercel routing (/api/data & /web/*)
+├── .env.example                 # JADWALIN_PIN & Upstash Redis env template
 ├── JadwalIn.xcodeproj/
 ├── JadwalIn/
 │   ├── App/
 │   │   ├── JadwalInApp.swift
-│   │   └── MainTabView.swift
+│   │   └── MainTabView.swift    # 5-tab navigation (Hari Ini, Kalender, PomoFlow, Matriks & Habit, Wawasan)
 │   ├── Models/
-│   │   ├── Course.swift
-│   │   ├── Assignment.swift
+│   │   ├── Course.swift         # Course + credits (SKS) + SmartGapSlot
+│   │   ├── Assignment.swift     # Unified Task/Assignment + ChecklistItem + RecurrenceRule + Habit + FocusSession + CountdownItem
 │   │   ├── DayOfWeek.swift
-│   │   └── Priority.swift
+│   │   └── Priority.swift       # 4 levels (none, low, medium, high)
 │   ├── Store/
-│   │   └── ScheduleStore.swift
+│   │   └── ScheduleStore.swift  # Store v2 + Smart NLP + Smart Gap + Memory Curve + Matrix + Momentum Score
 │   ├── Features/
 │   │   ├── Today/
-│   │   │   ├── TodayView.swift
-│   │   │   └── TodayViewModel.swift
+│   │   │   └── TodayView.swift
 │   │   ├── Schedule/
 │   │   │   ├── ScheduleView.swift
 │   │   │   └── AddCourseSheet.swift
 │   │   ├── Assignments/
 │   │   │   ├── AssignmentsView.swift
-│   │   │   ├── AddAssignmentSheet.swift
-│   │   │   └── EditAssignmentSheet.swift
+│   │   │   └── AddAssignmentSheet.swift
 │   │   └── Settings/
 │   │       └── SettingsView.swift
 │   ├── Shared/
@@ -53,11 +64,5 @@ jadwal-in/
 │   │       └── Date+Extensions.swift
 │   └── Assets.xcassets/
 └── JadwalInTests/
-    └── JadwalInTests.swift
+    └── JadwalInTests.swift      # Unit tests for NLP, Memory Curve, Smart Gap, Matrix, Habit Skip, Store v2
 ```
-
-## 2. Tanggung Jawab Modul
-- **`Models/`**: Tipe data murni (`struct`) yang mematuhi `Identifiable`, `Codable`, `Hashable`.
-- **`Store/`**: `ScheduleStore` mengelola state aplikasi dan berkas persisten JSON. Satu-satunya entitas yang berhak membaca/menulis ke disk.
-- **`Features/`**: Antarmuka tampilan per domain navigasi (Today, Schedule, Assignments, Settings).
-- **`Shared/`**: Komponen UI yang dipakai berulang, palet warna, tipografi, dan extension tanggal.

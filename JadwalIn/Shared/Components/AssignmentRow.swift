@@ -4,7 +4,7 @@ public struct AssignmentRow: View {
     let assignment: Assignment
     let course: Course?
     let onToggle: () -> Void
-    
+
     public init(
         assignment: Assignment,
         course: Course?,
@@ -14,115 +14,116 @@ public struct AssignmentRow: View {
         self.course = course
         self.onToggle = onToggle
     }
-    
-    private var countdownBadgeText: String {
-        if assignment.isCompleted {
-            return "[✓ SELESAI]"
-        }
-        let interval = assignment.dueDate.timeIntervalSince(Date())
-        if interval < 0 {
-            let pastH = Int(abs(interval) / 3600)
-            return pastH < 24 ? "[TERLEWAT \(pastH)J]" : "[TERLEWAT \(pastH / 24)H]"
-        }
-        let totalHours = Int(interval / 3600)
-        let totalMinutes = Int((interval.truncatingRemainder(dividingBy: 3600)) / 60)
-        
-        if totalHours <= 24 {
-            return "[T-\(String(format: "%02d", totalHours))H:\(String(format: "%02d", totalMinutes))M]"
-        } else if totalHours <= 48 {
-            return "[BESOK // +\(totalHours - 24)J]"
-        } else {
-            let days = totalHours / 24
-            return "[T-\(days) HARI]"
-        }
+
+    private var dueLabelColor: Color {
+        if assignment.status != .active { return Theme.inkMuted }
+        if assignment.isOverdue { return Theme.signalRed }
+        let hours = assignment.dueDate.timeIntervalSince(Date()) / 3600
+        return hours <= 48 ? Theme.amberWarning : Theme.inkSecondary
     }
-    
-    private var countdownColor: Color {
-        if assignment.isCompleted {
-            return Theme.inkMuted
-        }
-        switch assignment.urgency {
-        case .critical:
-            return Theme.safetyOrange
-        case .approaching:
-            return Theme.amberWarning
-        case .upcoming:
-            return Theme.inkSecondary
-        }
-    }
-    
+
     public var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            // Square Swiss Checkbox
             Button(action: onToggle) {
                 ZStack {
-                    Rectangle()
-                        .stroke(Theme.inkPrimary, lineWidth: 1)
-                        .background(assignment.isCompleted ? Theme.inkPrimary : Color.clear)
-                        .frame(width: 18, height: 18)
-                    
+                    RoundedRectangle(cornerRadius: 5)
+                        .stroke(assignment.isCompleted ? Theme.inkMuted : assignment.priority.color, lineWidth: 1.8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 5)
+                                .fill(assignment.isCompleted ? Theme.inkMuted : Color.clear)
+                        )
+                        .frame(width: 20, height: 20)
+
                     if assignment.isCompleted {
                         Image(systemName: "checkmark")
-                            .font(.system(size: 10, weight: .black))
-                            .foregroundColor(Theme.canvasBg)
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(.white)
+                    } else if assignment.status == .wontDo {
+                        Image(systemName: "minus")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(Theme.inkMuted)
                     }
                 }
             }
             .buttonStyle(BorderlessButtonStyle())
             .padding(.top, 2)
-            
-            // Content
-            VStack(alignment: .leading, spacing: 4) {
-                // Meta header: Course code + Countdown badge
-                HStack {
-                    if let course = course {
-                        Text("[\(course.code.isEmpty ? course.name : course.code)]")
-                            .font(AppFont.monoTag())
-                            .foregroundColor(Theme.inkSecondary)
-                    }
-                    
-                    Spacer()
-                    
-                    Text(countdownBadgeText)
-                        .font(AppFont.monoTag())
-                        .foregroundColor(countdownColor)
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 1)
-                        .background(countdownColor.opacity(0.1))
-                        .cornerRadius(2)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 2)
-                                .stroke(countdownColor.opacity(0.3), lineWidth: 1)
-                        )
-                }
-                
-                // Title
-                Text(assignment.title)
-                    .font(AppFont.headline())
-                    .foregroundColor(assignment.isCompleted ? Theme.inkMuted : Theme.inkPrimary)
-                    .strikethrough(assignment.isCompleted, color: Theme.inkMuted)
-                    .lineLimit(2)
-                
-                // Notes if any
-                if !assignment.notes.isEmpty && !assignment.isCompleted {
-                    Text(assignment.notes)
-                        .font(AppFont.body())
-                        .foregroundColor(Theme.inkMuted)
+
+            VStack(alignment: .leading, spacing: 5) {
+                HStack(alignment: .top, spacing: 8) {
+                    Text(assignment.title)
+                        .font(AppFont.headline())
+                        .foregroundColor(assignment.status == .active ? Theme.inkPrimary : Theme.inkMuted)
+                        .strikethrough(assignment.status != .active, color: Theme.inkMuted)
                         .lineLimit(2)
+
+                    Spacer()
+
+                    if assignment.isPinned {
+                        Image(systemName: "pin.fill")
+                            .font(.system(size: 11))
+                            .foregroundColor(Theme.classicBlue)
+                    }
                 }
-                
-                // Due date
-                Text("DEADLINE: \(assignment.formattedDueDateTime.uppercased())")
-                    .font(AppFont.monoCaption())
-                    .foregroundColor(Theme.inkMuted)
+
+                HStack(spacing: 8) {
+                    Text(assignment.formattedDueDateTime)
+                        .font(AppFont.caption())
+                        .foregroundColor(dueLabelColor)
+
+                    if let course = course {
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(course.accentColor)
+                                .frame(width: 6, height: 6)
+                            Text(course.code.isEmpty ? course.name : course.code)
+                                .font(AppFont.caption())
+                                .foregroundColor(Theme.inkSecondary)
+                        }
+                    } else {
+                        Text(assignment.listId.capitalized)
+                            .font(AppFont.caption())
+                            .foregroundColor(Theme.inkMuted)
+                    }
+
+                    if !assignment.checklistItems.isEmpty {
+                        let done = assignment.checklistItems.filter(\.isCompleted).count
+                        Text("\(done)/\(assignment.checklistItems.count)")
+                            .font(AppFont.caption())
+                            .foregroundColor(Theme.inkMuted)
+                    }
+
+                    if assignment.repeatRule == .ebbinghaus {
+                        Text("Memory Curve")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundColor(Theme.classicBlue)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Theme.classicBlueTint)
+                            .cornerRadius(4)
+                    }
+                }
+
+                if assignment.progress > 0 && assignment.progress < 100 && assignment.status == .active {
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Capsule()
+                                .fill(Theme.subtleBg)
+                                .frame(height: 4)
+                            Capsule()
+                                .fill(Theme.classicBlue)
+                                .frame(width: geo.size.width * CGFloat(assignment.progress) / 100.0, height: 4)
+                        }
+                    }
+                    .frame(height: 4)
                     .padding(.top, 2)
+                }
             }
         }
         .padding(12)
-        .background(assignment.isCompleted ? Theme.surfaceBg : Theme.canvasBg)
-        .cornerRadius(2)
+        .background(Theme.surfaceBg)
+        .cornerRadius(10)
         .overlay(
-            RoundedRectangle(cornerRadius: 2)
+            RoundedRectangle(cornerRadius: 10)
                 .stroke(Theme.borderCrisp, lineWidth: 1)
         )
     }

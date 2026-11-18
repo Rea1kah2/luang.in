@@ -1,4 +1,23 @@
 {
+  "schemaVersion": 2,
+  "profile": {
+    "name": "Rani Pratiwi",
+    "role": "Teknik Informatika • Semester 3",
+    "dailyFocusGoalMinutes": 120
+  },
+  "settings": {
+    "theme": "classic",
+    "pomoDuration": 25,
+    "shortBreak": 5,
+    "longBreak": 15,
+    "notificationsEnabled": true
+  },
+  "lists": [
+    { "id": "inbox", "name": "Inbox", "colorHex": "64748B" },
+    { "id": "kuliah", "name": "Kuliah", "colorHex": "4772FA" },
+    { "id": "organisasi", "name": "Organisasi", "colorHex": "D97706" },
+    { "id": "pribadi", "name": "Pribadi", "colorHex": "247B50" }
+  ],
   "courses": [
     {
       "id": "c-1",
@@ -6,10 +25,11 @@
       "code": "IF2101",
       "lecturer": "Dr. Bambang Sutrisno",
       "room": "Lab Komputer 2",
+      "credits": 3,
       "dayOfWeek": 1,
       "startTime": "08:00",
       "endTime": "10:30",
-      "colorHex": "1E3A8A"
+      "colorHex": "4772FA"
     },
     {
       "id": "c-2",
@@ -17,6 +37,7 @@
       "code": "IF2102",
       "lecturer": "Ir. Ratna Dewi, M.Kom",
       "room": "Gedung B R.304",
+      "credits": 3,
       "dayOfWeek": 1,
       "startTime": "13:00",
       "endTime": "15:30",
@@ -27,18 +48,20 @@
       "name": "Pemrograman Web & Mobile",
       "code": "IF2103",
       "lecturer": "Faisal Rahman, S.T., M.T.",
-      "room": "Lab Software",
+      "room": "Lab Software 1",
+      "credits": 3,
       "dayOfWeek": 2,
       "startTime": "09:00",
       "endTime": "11:30",
-      "colorHex": "059669"
+      "colorHex": "247B50"
     },
     {
       "id": "c-4",
-      "name": "Jaringan Komputer",
+      "name": "Jaringan Komputer & Lab",
       "code": "IF2104",
       "lecturer": "Ahmad Hidayat, M.Cs",
       "room": "Gedung C R.201",
+      "credits": 3,
       "dayOfWeek": 3,
       "startTime": "10:00",
       "endTime": "12:30",
@@ -50,10 +73,11 @@
       "code": "IF2105",
       "lecturer": "Dr. Siti Nurhaliza",
       "room": "Gedung A R.102",
+      "credits": 3,
       "dayOfWeek": 4,
       "startTime": "08:30",
       "endTime": "11:00",
-      "colorHex": "7C3AED"
+      "colorHex": "0F766E"
     },
     {
       "id": "c-6",
@@ -61,48 +85,257 @@
       "code": "IF2106",
       "lecturer": "Drs. Hendro Wibowo",
       "room": "Gedung B R.205",
+      "credits": 2,
       "dayOfWeek": 5,
       "startTime": "08:00",
-      "endTime": "10:00",
-      "colorHex": "DC2626"
+      "endTime": "09:40",
+      "colorHex": "C4242A"
+    },
+    {
+      "id": "c-7",
+      "name": "Interaksi Manusia & Komputer",
+      "code": "IF2107",
+      "lecturer": "Maya Kusuma, M.Des",
+      "room": "Studio Desain R.104",
+      "credits": 2,
+      "dayOfWeek": 2,
+      "startTime": "14:00",
+      "endTime": "15:40",
+      "colorHex": "0F766E"
     }
   ],
-  "assignments": [
+  "tasks": [
     {
       "id": "t-1",
+      "listId": "kuliah",
       "courseId": "c-1",
-      "title": "Implementasi Binary Search Tree",
-      "dueDate": "2026-11-05T02:53:31.817Z",
-      "priority": "Tinggi",
-      "isCompleted": true,
-      "notes": "Gunakan bahasa C++ atau Python. Buat fungsi insert, delete, dan transversal."
+      "title": "Implementasi Binary Search Tree & AVL Rotation",
+      "notes": "Pastikan bebas memory leak dan sertakan tabel benchmark insert/delete.",
+      "dueDate": "2026-11-18T14:00:00.000Z",
+      "priority": 5,
+      "status": "active",
+      "isCompleted": false,
+      "kanbanColumn": "in_progress",
+      "progress": 65,
+      "isPinned": true,
+      "repeatRule": "none",
+      "ebbinghausStage": 0,
+      "tags": ["praktikum", "cpp"],
+      "estimatedPomos": 2,
+      "completedPomos": 1,
+      "focusMinutes": 25,
+      "items": [
+        { "id": "chk-1", "title": "Implementasi rotasi kiri & kanan AVL", "isCompleted": true },
+        { "id": "chk-2", "title": "Unit test traversal inorder dan postorder", "isCompleted": true },
+        { "id": "chk-3", "title": "Ekspor PDF laporan benchmark", "isCompleted": false }
+      ]
     },
     {
       "id": "t-2",
+      "listId": "kuliah",
       "courseId": "c-2",
-      "title": "Perancangan ERD Rumah Sakit",
-      "dueDate": "2026-11-06T10:53:31.817Z",
-      "priority": "Sedang",
-      "isCompleted": true,
-      "notes": "Normalisasi tabel hingga 3NF beserta kamus data."
+      "title": "Review Normalisasi Basis Data (1NF s/d BCNF)",
+      "notes": "Menggunakan Memory Curve™ untuk pengulangan bertahap menjelang UTS.",
+      "dueDate": "2026-11-18T20:00:00.000Z",
+      "priority": 5,
+      "status": "active",
+      "isCompleted": false,
+      "kanbanColumn": "todo",
+      "progress": 25,
+      "isPinned": false,
+      "repeatRule": "ebbinghaus",
+      "ebbinghausStage": 1,
+      "tags": ["kuis", "review"],
+      "estimatedPomos": 2,
+      "completedPomos": 0,
+      "focusMinutes": 0,
+      "items": [
+        { "id": "chk-4", "title": "Kerjakan 5 studi kasus ERD Rumah Sakit", "isCompleted": false },
+        { "id": "chk-5", "title": "Verifikasi diagram functional dependency", "isCompleted": false }
+      ]
     },
     {
       "id": "t-3",
+      "listId": "kuliah",
       "courseId": "c-3",
-      "title": "Prototype Wireframe UI Aplikasi",
-      "dueDate": "2026-11-09T10:53:31.817Z",
-      "priority": "Rendah",
-      "isCompleted": true,
-      "notes": "Desain 5 flow utama di Figma."
+      "title": "Refactor API Sync & Responsive Framed Sheet PWA",
+      "notes": "Cek tampilan pada lebar 390px dan 1440px serta validasi PIN.",
+      "startDate": "2026-11-17T12:00:00.000Z",
+      "dueDate": "2026-11-17T13:30:00.000Z",
+      "priority": 3,
+      "status": "active",
+      "isCompleted": false,
+      "kanbanColumn": "review",
+      "progress": 80,
+      "isPinned": false,
+      "repeatRule": "none",
+      "ebbinghausStage": 0,
+      "tags": ["proyek", "frontend"],
+      "estimatedPomos": 2,
+      "completedPomos": 1,
+      "focusMinutes": 25,
+      "items": []
     },
     {
       "id": "t-4",
+      "listId": "organisasi",
+      "courseId": null,
+      "title": "Finalisasi Rundown Workshop UI/UX Himpunan",
+      "notes": "Konfirmasi pembicara alumni dan cek ketersediaan proyektor Aula Timur.",
+      "dueDate": "2026-11-19T17:00:00.000Z",
+      "priority": 3,
+      "status": "active",
+      "isCompleted": false,
+      "kanbanColumn": "todo",
+      "progress": 40,
+      "isPinned": false,
+      "repeatRule": "none",
+      "ebbinghausStage": 0,
+      "tags": ["himpunan", "acara"],
+      "estimatedPomos": 1,
+      "completedPomos": 0,
+      "focusMinutes": 0,
+      "items": [
+        { "id": "chk-6", "title": "Kirim surat peminjaman ruangan ke fakultas", "isCompleted": true },
+        { "id": "chk-7", "title": "Bagikan brief ke MC & moderator", "isCompleted": false }
+      ]
+    },
+    {
+      "id": "t-5",
+      "listId": "pribadi",
+      "courseId": null,
+      "title": "Perbarui Portofolio GitHub & Arsitektur Diagram",
+      "notes": "Tambahkan studi kasus luang.in beserta screenshot desktop dan mobile.",
+      "dueDate": "2026-11-22T21:00:00.000Z",
+      "priority": 1,
+      "status": "active",
+      "isCompleted": false,
+      "kanbanColumn": "todo",
+      "progress": 0,
+      "isPinned": false,
+      "repeatRule": "none",
+      "ebbinghausStage": 0,
+      "tags": ["karir"],
+      "estimatedPomos": 2,
+      "completedPomos": 0,
+      "focusMinutes": 0,
+      "items": []
+    },
+    {
+      "id": "t-6",
+      "listId": "kuliah",
+      "courseId": "c-7",
+      "title": "Heuristik Nielsen & Wireframe Evaluasi",
+      "notes": "Evaluasi 10 prinsip heuristik pada aplikasi produktivitas.",
+      "dueDate": "2026-11-20T15:00:00.000Z",
+      "priority": 3,
+      "status": "active",
+      "isCompleted": false,
+      "kanbanColumn": "todo",
+      "progress": 15,
+      "isPinned": false,
+      "repeatRule": "none",
+      "ebbinghausStage": 0,
+      "tags": ["desain"],
+      "estimatedPomos": 2,
+      "completedPomos": 0,
+      "focusMinutes": 0,
+      "items": []
+    },
+    {
+      "id": "t-7",
+      "listId": "kuliah",
       "courseId": "c-4",
-      "title": "Laporan Praktikum Subnetting",
-      "dueDate": "2026-11-03T10:53:31.817Z",
-      "priority": "Sedang",
+      "title": "Laporan Praktikum Subnetting VLSM",
+      "notes": "Sudah diunggah ke portal akademik sebelum tenggat.",
+      "dueDate": "2026-11-16T23:59:00.000Z",
+      "priority": 3,
+      "status": "completed",
       "isCompleted": true,
-      "notes": "Sudah diunggah ke Google Classroom."
+      "kanbanColumn": "done",
+      "progress": 100,
+      "isPinned": false,
+      "repeatRule": "none",
+      "ebbinghausStage": 0,
+      "tags": ["praktikum"],
+      "estimatedPomos": 2,
+      "completedPomos": 2,
+      "focusMinutes": 50,
+      "items": []
     }
+  ],
+  "habits": [
+    {
+      "id": "h-1",
+      "name": "Review Materi Kuliah",
+      "icon": "book",
+      "colorHex": "4772FA",
+      "section": "malam",
+      "type": "counter",
+      "goal": 30,
+      "unit": "menit",
+      "encouragement": "Tiga puluh menit malam ini menghemat tiga jam SKS saat UTS.",
+      "currentStreak": 5,
+      "longestStreak": 9,
+      "logs": {
+        "2026-11-12": { "status": "done", "value": 30, "mood": "focused", "note": "Review pointer & linked list" },
+        "2026-11-13": { "status": "done", "value": 30, "mood": "happy", "note": "Latihan query SQL" },
+        "2026-11-14": { "status": "skip", "value": 0, "mood": "tired", "note": "Izin rapat kepanitiaan sampai malam" },
+        "2026-11-15": { "status": "done", "value": 35, "mood": "focused", "note": "Bedah topologi VLSM" },
+        "2026-11-16": { "status": "done", "value": 30, "mood": "focused", "note": "Pohon biner & traversal" }
+      }
+    },
+    {
+      "id": "h-2",
+      "name": "Minum Air Mineral",
+      "icon": "droplet",
+      "colorHex": "0284C7",
+      "section": "siang",
+      "type": "counter",
+      "goal": 8,
+      "unit": "gelas",
+      "encouragement": "Hidrasi stabil menjaga fokus sepanjang kelas siang.",
+      "currentStreak": 7,
+      "longestStreak": 12,
+      "logs": {
+        "2026-11-11": { "status": "done", "value": 8, "mood": "happy", "note": "" },
+        "2026-11-12": { "status": "done", "value": 8, "mood": "happy", "note": "" },
+        "2026-11-13": { "status": "done", "value": 8, "mood": "happy", "note": "" },
+        "2026-11-14": { "status": "done", "value": 8, "mood": "happy", "note": "" },
+        "2026-11-15": { "status": "done", "value": 8, "mood": "focused", "note": "" },
+        "2026-11-16": { "status": "done", "value": 8, "mood": "focused", "note": "" },
+        "2026-11-17": { "status": "partial", "value": 5, "mood": "focused", "note": "" }
+      }
+    },
+    {
+      "id": "h-3",
+      "name": "Baca Buku Non-Teknis",
+      "icon": "layers",
+      "colorHex": "247B50",
+      "section": "pagi",
+      "type": "counter",
+      "goal": 15,
+      "unit": "halaman",
+      "encouragement": "Awali pagi sebelum membuka media sosial.",
+      "currentStreak": 4,
+      "longestStreak": 7,
+      "logs": {
+        "2026-11-14": { "status": "done", "value": 15, "mood": "happy", "note": "" },
+        "2026-11-15": { "status": "done", "value": 20, "mood": "happy", "note": "" },
+        "2026-11-16": { "status": "done", "value": 15, "mood": "focused", "note": "" },
+        "2026-11-17": { "status": "done", "value": 15, "mood": "focused", "note": "" }
+      }
+    }
+  ],
+  "focusSessions": [
+    { "id": "fs-1", "targetId": "t-1", "targetTitle": "Implementasi Binary Search Tree & AVL Rotation", "courseId": "c-1", "mode": "pomo", "durationMinutes": 25, "startedAt": "2026-11-15T14:00:00.000Z", "note": "Menyelesaikan fungsi insert & rotasi kanan" },
+    { "id": "fs-2", "targetId": "t-3", "targetTitle": "Refactor API Sync & Responsive Framed Sheet PWA", "courseId": "c-3", "mode": "pomo", "durationMinutes": 25, "startedAt": "2026-11-16T09:30:00.000Z", "note": "Menyusun layout Framed Sheet" },
+    { "id": "fs-3", "targetId": "t-7", "targetTitle": "Laporan Praktikum Subnetting VLSM", "courseId": "c-4", "mode": "pomo", "durationMinutes": 50, "startedAt": "2026-11-16T19:00:00.000Z", "note": "2 siklus pomo untuk verifikasi tabel subnet" },
+    { "id": "fs-4", "targetId": "c-2", "targetTitle": "Sistem Basis Data", "courseId": "c-2", "mode": "stopwatch", "durationMinutes": 35, "startedAt": "2026-11-17T08:15:00.000Z", "note": "Membaca ulang slide normalisasi" }
+  ],
+  "countdowns": [
+    { "id": "cd-1", "title": "UTS Algoritma & Struktur Data", "targetDate": "2026-11-26T08:00:00.000Z", "category": "UTS", "colorHex": "4772FA", "isPinned": true, "courseId": "c-1" },
+    { "id": "cd-2", "title": "Demo Prototype Pemrograman Web", "targetDate": "2026-11-21T13:00:00.000Z", "category": "Proyek", "colorHex": "247B50", "isPinned": true, "courseId": "c-3" },
+    { "id": "cd-3", "title": "Workshop UI/UX Himpunan", "targetDate": "2026-12-01T09:00:00.000Z", "category": "Event", "colorHex": "D97706", "isPinned": false, "courseId": null }
   ]
 }

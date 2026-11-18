@@ -1,48 +1,27 @@
-# Implementation Tasks: Jadwal-In Core Schedule & Assignments
+# Implementation Tasks: luang.in 2.0
 
-- [x] **1. Scaffolding Proyek & Konfigurasi Xcode**
-  - [x] 1.1 Buat struktur direktori `JadwalIn/` (`App/`, `Models/`, `Store/`, `Features/`, `Shared/`, `Assets.xcassets/`)
-  - [x] 1.2 Buat berkas konfigurasi proyek Xcode `JadwalIn.xcodeproj/project.pbxproj` yang mengikat seluruh target Swift
+- [x] **1. Brand & Spesifikasi (.kiro/)**
+  - [x] 1.1 Perbarui steering & spec ke identitas `luang.in` (Framed Sheet + 5 Signature Features)
 
-- [x] **2. Tipe Data Inti (Models Layer)**
-  - [x] 2.1 Buat `DayOfWeek.swift` dengan urutan hari 1–7 (Senin–Minggu) dan nama lokal Indonesia
-  - [x] 2.2 Buat `Priority.swift` dengan enum Rendah, Sedang, Tinggi beserta token warna aksen
-  - [x] 2.3 Buat `Course.swift` dengan properti lengkap mata kuliah dan helper format rentang jam
-  - [x] 2.4 Buat `Assignment.swift` dengan kalkulator dinamis sisa jam deadline, `UrgencyLevel`, dan format waktu manusiawi
+- [x] **2. Cloud Sync API, Local Dev Server & Store v2 Seed**
+  - [x] 2.1 Perbarui `api/data.js` dengan validasi Store v2, migrasi v1->v2, dan perbaikan validasi PIN ketat
+  - [x] 2.2 Perbarui `web/server.py` dan `web/jadwalin_store.json` untuk Store v2
 
-- [x] **3. State Manager & Persistensi JSON (Store Layer)**
-  - [x] 3.1 Buat `ScheduleStore.swift` dengan protokol `ObservableObject` dan properti `@Published`
-  - [x] 3.2 Terapkan mekanisme atomic read/write JSON ke direktori App Documents
-  - [x] 3.3 Tambahkan fungsi CRUD untuk Course dan Assignment
-  - [x] 3.4 Sediakan dataset awal realistis (Rani's Semester 3 Sample Data) jika berkas storage belum ada
+- [x] **3. Web PWA (`web/`) — Framed Sheet TickTick UI & Engine**
+  - [x] 3.1 Perbarui `web/icon.svg` (Time-Gap Grid), `web/manifest.json`, dan `web/sw.js`
+  - [x] 3.2 Bangun `web/index.html` & `web/style.css` (IBM Plex Sans/Mono, 5 tema TickTick, Framed Sheet + Inspector)
+  - [x] 3.3 Bangun `web/app.js` (Smart NLP, Interactive Time-Gap Ribbon, List/Kanban/Timeline, Calendar Arrange, Eisenhower Matrix, PomoFlow + Web Audio White Noise, Streak-Safe Habit, Countdown, Momentum Score)
+  - [x] 3.4 Audit tampilan Web dengan `taste-skill` `lint.mjs --app` (`0 FAIL`) & verifikasi DOM/visual Chrome headless (`0` runtime error, desktop `1440px` & mobile `390px` `overflow: false`)
 
-- [x] **4. Desain Sistem & Shared Components (Design System)**
-  - [x] 4.1 Buat `ColorTokens.swift` (Deep Navy `#0F172A`, Slate, Warm Tangerine `#EA580C`, Academic Amber `#F59E0B`, Emerald)
-  - [x] 4.2 Buat `Typography.swift` (standar hirarki tipografi SF Pro)
-  - [x] 4.3 Buat `UrgencyBadge.swift` (penanda visual badge waktu sisa tugas)
-  - [x] 4.4 Buat `EmptyStateView.swift` (tampilan ramah saat daftar kosong)
-  - [x] 4.5 Buat `Date+Extensions.swift` (formatter tanggal & hari dalam Bahasa Indonesia)
+- [x] **4. Native iOS SwiftUI (`JadwalIn/` & `JadwalInTests/`)**
+  - [x] 4.1 Perbarui Models (`Priority`, `Course`, `Assignment`/Task, `Habit`, `FocusSession`, `CountdownItem`)
+  - [x] 4.2 Perbarui `ScheduleStore.swift` (NLP, Smart Gap™, Memory Curve™, Matrix, Momentum Score™)
+  - [x] 4.3 Perbarui `ColorTokens.swift`, `Typography.swift`, dan Shared Components
+  - [x] 4.4 Perbarui `MainTabView` (5 tab) dan Feature Views (`TodayView`, `ScheduleView`, `AddCourseSheet`, `AssignmentsView`, `AddAssignmentSheet`, `SettingsView`)
+  - [~] 4.5 Perbarui `JadwalInTests.swift` & verifikasi kompilasi `swiftc` terhadap `iPhoneSimulator16.2.sdk` (`SWIFTC_TESTS_TYPECHECK_OK`, 20 `.o` object files); eksekusi live `xcodebuild test` di Simulator menunggu sesi non-sandbox CoreSimulator.
 
-- [x] **5. Fitur Layar Today (Daily Dashboard)**
-  - [x] 5.1 Buat `TodayView.swift` menampilkan salam kontekstual & tanggal hari ini
-  - [x] 5.2 Tampilkan kartu kelas hari ini yang diurutkan dari jam termuda
-  - [x] 5.3 Tampilkan seksi "Deadline Mendesak" (< 3 hari) dengan indikator sisa waktu
-
-- [x] **6. Fitur Layar Jadwal (Weekly Schedule)**
-  - [x] 6.1 Buat `ScheduleView.swift` dengan pemilih hari (Senin s/d Sabtu)
-  - [x] 6.2 Buat `CourseCard.swift` untuk menampilkan detail kelas, ruangan, dan dosen
-  - [x] 6.3 Buat `AddCourseSheet.swift` untuk formulir penambahan mata kuliah baru
-
-- [x] **7. Fitur Layar Tugas (Assignment Tracker)**
-  - [x] 7.1 Buat `AssignmentsView.swift` dengan filter chip per mata kuliah dan tab Aktif / Selesai
-  - [x] 7.2 Buat `AssignmentRow.swift` dengan tombol checklist interaktif dan badge urgensi
-  - [x] 7.3 Buat `AddAssignmentSheet.swift` dengan pemilih matkul, DatePicker, dan selector prioritas
-
-- [x] **8. Fitur Pengaturan & Navigasi Utama**
-  - [x] 8.1 Buat `SettingsView.swift` (informasi persona Rani, statistik data tersimpan, tombol reset sample data)
-  - [x] 8.2 Buat `MainTabView.swift` menghubungkan 4 tab (Hari Ini, Jadwal, Tugas, Pengaturan)
-  - [x] 8.3 Buat `JadwalInApp.swift` sebagai App lifecycle entry point
-
-- [x] **9. Pengujian Unit & Verifikasi Build**
-  - [x] 9.1 Buat unit test suite `JadwalInTests.swift` (pengujian kalkulasi deadline, sorting, dan serialisasi store)
-  - [x] 9.2 Jalankan build & unit tests menggunakan `xcodebuild` untuk memverifikasi nol error
+- [x] **5. Vercel 24/7 Hosting, Upstash Redis & Offline-First Sync**
+  - [x] 5.1 Konfigurasi header PWA `vercel.json`, multi-alias Upstash command-array + `?ping=true` di `api/data.js` & `web/server.py`
+  - [x] 5.2 Ikon raster iOS (`apple-touch-icon.png`, `icon-192.png`, `icon-512.png`), Service Worker `luangin-v3`, dan IndexedDB Dual-Storage + Offline Queue anti-timpa di `web/app.js`
+  - [x] 5.3 Tambahkan Cloud Sync ISO-8601 (`URLSession` <-> `/api/data`) di `ScheduleStore.swift` & `SettingsView.swift` serta unit test roundtrip Store v2 di `JadwalInTests.swift`
+  - [x] 5.4 Susun `PANDUAN_HOSTING.md`, rapikan `.gitignore`/root artifacts, verifikasi Offline-First E2E Chrome + `swiftc` + Upstash KV mock tests

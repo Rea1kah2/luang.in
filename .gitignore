@@ -17,3 +17,10 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Build & Python caches
+*.o
+*.swiftmodule
+*.ipa
+__pycache__/
+*.pyc

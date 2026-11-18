@@ -1,136 +1,65 @@
-# Technical Design: Jadwal-In Core Engine
+# Technical Design: luang.in Core Engine v2
 
-## 1. Arsitektur Sistem
-
-```mermaid
-graph TD
-    subgraph UI ["SwiftUI Views Layer"]
-        MV["MainTabView"]
-        TV["TodayView"]
-        SV["ScheduleView"]
-        AV["AssignmentsView"]
-        STV["SettingsView"]
-        
-        MV --> TV
-        MV --> SV
-        MV --> AV
-        MV --> STV
-    end
-
-    subgraph Store ["Reactive State Management"]
-        SS["ScheduleStore (ObservableObject)"]
-        TV -.->|Observes & Dispatches| SS
-        SV -.->|Observes & Dispatches| SS
-        AV -.->|Observes & Dispatches| SS
-        STV -.->|Observes & Dispatches| SS
-    end
-
-    subgraph Storage ["Local Persistence Layer"]
-        FM["FileManager (Atomic JSON Write)"]
-        JSON["jadwalin_store.json (Sandbox Documents)"]
-        
-        SS -->|Atomic JSON Write| FM
-        FM --> JSON
-        JSON -->|Decode at launch| SS
-    end
-```
-
----
-
-## 2. Model Data & Relasi (Entity-Relationship)
+## 1. Arsitektur Lintas Platform
 
 ```mermaid
-erDiagram
-    COURSE ||--o{ ASSIGNMENT : has
-    COURSE {
-        UUID id PK
-        string name
-        string code
-        string lecturer
-        string room
-        int dayOfWeek
-        string startTime
-        string endTime
-        string colorHex
-    }
-    ASSIGNMENT {
-        UUID id PK
-        UUID courseId FK
-        string title
-        datetime dueDate
-        string priority
-        boolean isCompleted
-        string notes
-    }
+flowchart TD
+    subgraph Client ["Client Apps (Dual-Platform)"]
+        WEB["Web PWA (web/) — Framed Sheet 4-Pane UI"]
+        IOS["iOS SwiftUI (JadwalIn/) — 5-Tab Native UI"]
+    end
+
+    subgraph Engine ["Shared Domain Logic"]
+        NLP["Smart NLP Parser (Date, Priority, @Course/@List, #Tag, ~Pomo, !Memory)"]
+        GAP["Smart Gap™ Finder (07:00-22:00 Free Windows -> Best Q1/Q2 Match)"]
+        MAT["Eisenhower Matrix Classifier (Q1-Q4)"]
+        MEM["Memory Curve™ Iterator (Ebbinghaus 1-2-4-7-15)"]
+        MOM["Momentum Score™ Calculator (Lv. 1-12)"]
+    end
+
+    subgraph Sync ["Persistence & Cloud Sync"]
+        LS["localStorage / Atomic JSON Store"]
+        API["/api/data (Vercel Serverless + Upstash Redis KV / Python Dev Server)"]
+    end
+
+    WEB --> Engine
+    IOS --> Engine
+    Engine --> LS
+    WEB <-->|x-jadwalin-pin| API
 ```
 
-### Definisi Swift Data Types
+## 2. Unified Store Schema v2
 
-```swift
-public enum DayOfWeek: Int, Codable, CaseIterable, Identifiable {
-    case monday = 1, tuesday, wednesday, thursday, friday, saturday, sunday
-    public var id: Int { rawValue }
-    public var localizedName: String { ... } // "Senin", "Selasa", dst.
-}
-
-public enum Priority: String, Codable, CaseIterable, Identifiable {
-    case low = "Rendah"
-    case medium = "Sedang"
-    case high = "Tinggi"
-    public var id: String { rawValue }
-}
-
-public struct Course: Identifiable, Codable, Hashable {
-    public let id: UUID
-    public var name: String
-    public var code: String
-    public var lecturer: String
-    public var room: String
-    public var dayOfWeek: DayOfWeek
-    public var startTime: String // format "HH:mm"
-    public var endTime: String   // format "HH:mm"
-    public var colorHex: String
-}
-
-public struct Assignment: Identifiable, Codable, Hashable {
-    public let id: UUID
-    public var courseId: UUID
-    public var title: String
-    public var dueDate: Date
-    public var priority: Priority
-    public var isCompleted: Bool
-    public var notes: String
-    
-    // Computed Urgency
-    public var urgency: UrgencyLevel { ... }
-    public var formattedRemainingTime: String { ... }
+```json
+{
+  "schemaVersion": 2,
+  "profile": {
+    "name": "Pengguna luang.in",
+    "role": "Teknik Informatika • Semester 3",
+    "dailyFocusGoalMinutes": 120
+  },
+  "settings": {
+    "theme": "classic",
+    "pomoDuration": 25,
+    "shortBreak": 5,
+    "longBreak": 15,
+    "notificationsEnabled": true
+  },
+  "lists": [
+    { "id": "inbox", "name": "Inbox", "colorHex": "64748B" },
+    { "id": "kuliah", "name": "Kuliah", "colorHex": "4772FA" },
+    { "id": "organisasi", "name": "Organisasi", "colorHex": "D97706" },
+    { "id": "pribadi", "name": "Pribadi", "colorHex": "247B50" }
+  ],
+  "courses": [],
+  "tasks": [],
+  "habits": [],
+  "focusSessions": [],
+  "countdowns": []
 }
 ```
 
----
-
-## 3. Alur Interaksi State (Sequence Diagram)
-
-```mermaid
-sequenceDiagram
-    actor Rani as User (Rani)
-    participant UI as AddAssignmentSheet
-    participant Store as ScheduleStore
-    participant Disk as FileManager (JSON)
-
-    Rani->>UI: Isi judul tugas, pilih matkul, tanggal & jam
-    Rani->>UI: Tekan tombol "Simpan Tugas"
-    UI->>Store: addAssignment(courseId, title, dueDate, priority, notes)
-    Store->>Store: Tambahkan ke array assignments & sort by dueDate
-    Store->>Disk: Serialisasi JSON & write secara atomic
-    Disk-->>Store: Sukses simpan (I/O OK)
-    Store-->>UI: @Published trigger UI update
-    UI-->>Rani: Sheet tertutup, tugas muncul di urutan teratas
-```
-
----
-
-## 4. Penanganan Edge Cases & Keamanan Data
-1. **Mata Kuliah Dihapus:** Jika suatu `Course` dihapus, seluruh `Assignment` yang terhubung akan ditandai dengan `courseId = nil` atau dihapus bersamaan dengan peringatan dialog konfirmasi untuk mencegah data korup.
-2. **Crash Resilience:** Menggunakan `Data.write(to: fileURL, options: .atomic)` yang menulis ke berkas sementara terlebih dahulu sebelum menggantikan berkas utama. Jika terjadi pemadaman daya/crash, data lama tetap selamat.
-3. **Seed Data Otomatis:** Saat pertama kali aplikasi dibuka (`jadwalin_store.json` belum ada), `ScheduleStore` akan otomatis menyuntikkan *sample data* realistis jadwal kuliah semester 3 Rani (misal: Algoritma, Basis Data, Jaringan Komputer, dsb.) sehingga pengguna langsung melihat wujud aplikasi yang hidup.
+## 3. Penanganan Edge Cases & Migrasi
+1. **Backward Compatibility v1 -> v2:** Jika store lama hanya memiliki array `assignments` dan belum memiliki `tasks`, mesin normalisasi otomatis mengonversi setiap `assignment` ke struktur `task` (memetakan `priority` string `"Tinggi"` -> `5`, `"Sedang"` -> `3`, `"Rendah"` -> `1`, dan menyinkronkan `isCompleted` dengan `status`).
+2. **Validasi PIN Keamanan:** `api/data.js` dan `web/server.py` membandingkan `x-jadwalin-pin` secara tepat dengan `expectedPin` (`process.env.JADWALIN_PIN || "1234"`), tidak lagi mengizinkan `"1234"` saat PIN kustom telah diatur.
+3. **Kejujuran Metrik (Anti-Slop Data Integrity):** Semua KPI di layar Insights & Dashboard (`Momentum Score`, `Focus Minutes`, `Completion Rate`, `Streaks`) dihitung secara langsung dari array data aktual pada saat render.

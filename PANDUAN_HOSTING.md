@@ -1,66 +1,151 @@
-# Panduan Hosting 24/7 `luang.in` (Vercel + Upstash Redis & Offline-First iOS PWA)
+# Panduan Hosting 24/7 `luang.in` (Render + Neon PostgreSQL + Vercel PWA)
 
-Panduan ini menyiapkan **`luang.in`** agar dapat diakses **24 jam online melalui HTTPS**, tetap berjalan **100% instan saat offline / Mode Pesawat** di iPhone melalui **IndexedDB + Service Worker**, dan menyinkronkan data antara **Web PWA** serta **Native iOS SwiftUI (`JadwalIn`)**.
+Panduan lengkap ini menyiapkan **`luang.in`** menggunakan arsitektur **100% Gratis Permanen**:
+- **Backend REST API:** [Render](https://render.com) (Node.js Web Service di region Singapore).
+- **Database Serverless:** [Neon](https://neon.tech) (PostgreSQL Serverless dengan kuota 0.5 GiB gratis permanen & JSONB store).
+- **Frontend Web PWA:** [Vercel](https://vercel.com) (Global Edge CDN, instan tanpa cold start, didukung Service Worker & IndexedDB offline-first).
+- **Native iOS App:** SwiftUI (`JadwalIn`) tersinkronisasi 2 arah dengan endpoint yang sama.
 
----
+```mermaid
+flowchart TD
+    subgraph Clients["Klien Pengguna"]
+        PWA["iPhone / Safari PWA\n(Offline-First + sw.js)"]
+        iOS["Native iOS SwiftUI\n(ScheduleStore.swift)"]
+    end
 
-## 1. Buat Database Redis Gratis (Upstash / Vercel Storage)
-1. Login ke [vercel.com](https://vercel.com) memakai akun **GitHub**.
-2. Pilih **Add New... -> Project**, lalu import repositori **`Rea1kah2/jadwal-in`**.
-3. Konfigurasi build:
-   - **Framework Preset:** `Other`
-   - **Root Directory:** `./` (biarkan kosong/root)
-   - **Build Command:** *(kosongkan — tidak membutuhkan npm build)*
-   - **Output Directory:** *(kosongkan — diatur otomatis melalui `vercel.json`)*
-4. Klik **Deploy** terlebih dahulu, atau langsung sambungkan database dari tab **Storage**:
-   - Di dashboard proyek Vercel, buka tab **Storage -> Create Database / Browse Marketplace -> Upstash Redis (Serverless Redis)** -> pilih paket **Free (Hobby)** -> klik **Connect to Project**.
-   - Vercel otomatis menyuntikkan variable `UPSTASH_REDIS_REST_URL` & `UPSTASH_REDIS_REST_TOKEN` (atau `KV_REST_API_URL` & `KV_REST_API_TOKEN` — keduanya didukung otomatis oleh `api/data.js`).
+    subgraph Frontend["Vercel (Global Edge CDN)"]
+        StaticCDN["Static Web Assets (web/)\n0 ms Cold Start"]
+    end
 
----
+    subgraph Backend["Render (Singapore)"]
+        NodeServer["Node.js Server (server.js)\n• /api/data & /health\n• Strict PIN Auth\n• CORS Enabled"]
+    end
 
-## 2. Atur PIN Akses (`JADWALIN_PIN`)
-1. Di proyek Vercel Anda, buka **Settings -> Environment Variables**.
-2. Tambahkan variable baru:
-   - **Name:** `JADWALIN_PIN`
-   - **Value:** `<PIN_PRIBADI_4_DIGIT_ANDA>` *(ganti dari default `1234` agar tidak bisa dibuka orang lain)*
-   - **Environments:** centang `Production`, `Preview`, `Development`.
-3. Buka tab **Deployments -> Redeploy** pada deployment terbaru agar variable aktif.
+    subgraph Database["Neon Serverless PostgreSQL"]
+        PostgresDB[("Tabel: app_store\nPayload JSONB (0.5 GiB Free)")]
+    end
 
----
-
-## 3. Verifikasi Backend & Redis
-Buka endpoint healthcheck di browser:
-```text
-https://<nama-proyek-anda>.vercel.app/api/data?ping=true
+    PWA <-->|"1. Load UI Instan"| StaticCDN
+    PWA <-->|"2. REST Sync JSON"| NodeServer
+    iOS <-->|"REST Sync JSON"| NodeServer
+    NodeServer <-->|"pg Connection Pool (SSL)"| PostgresDB
 ```
-Pastikan respons JSON menampilkan:
+
+---
+
+## 1. Buat Database Gratis di Neon PostgreSQL
+
+1. Buka [neon.tech](https://neon.tech) dan daftar menggunakan akun **GitHub** atau Google.
+2. Klik **Create Project**:
+   - **Project Name:** `luangin-db`
+   - **Postgres Version:** 16 (default)
+   - **Region:** **Singapore / `ap-southeast-1`** (terdekat dengan Indonesia untuk latensi terendah).
+3. Setelah database terbuat, pada halaman Dashboard Neon, salin **Connection String**:
+   - Pastikan opsi **Pooled connection** dicentang (menggunakan endpoint `-pooler.neon.tech`).
+   - Formatnya menyerupai:
+     ```text
+     postgresql://neondb_owner:npg_xxxx@ep-xxxx-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
+     ```
+4. *Selesai!* Anda tidak perlu membuat tabel manual karena server `luang.in` memiliki fitur **Auto-DDL** yang otomatis membuat tabel `app_store` dan menyisipkan data sampel saat pertama kali terhubung.
+
+---
+
+## 2. Deploy Backend ke Render (100% Gratis)
+
+1. Buka [render.com](https://render.com) dan login dengan akun **GitHub** Anda.
+2. Anda dapat memilih salah satu cara deploy:
+
+### Opsi A: Render Blueprint (Otomatis & Cepat) ⭐
+1. Klik tombol **New +** di dashboard Render, lalu pilih **Blueprint**.
+2. Pilih repositori **`Rea1kah2/jadwal-in`**.
+3. Render akan membaca [render.yaml](file:///Users/admin/documents/joki/jadwal-in/render.yaml) secara otomatis.
+4. Masukkan environment variable yang diminta:
+   - `DATABASE_URL`: Tempel connection string dari Neon (Langkah 1).
+   - `JADWALIN_PIN`: 4 digit PIN pribadi Anda (misal `2026`).
+5. Klik **Apply**. Render akan menginstal dependensi (`npm install`) dan menyalakan server.
+
+### Opsi B: Buat Web Service Manual
+1. Klik **New +** -> **Web Service**.
+2. Pilih repositori **`Rea1kah2/jadwal-in`**.
+3. Isi konfigurasi berikut:
+   - **Name:** `luangin-backend`
+   - **Region:** **Singapore**
+   - **Root Directory:** biarkan kosong (`./`)
+   - **Runtime:** `Node`
+   - **Build Command:** `npm install`
+   - **Start Command:** `npm start`
+   - **Instance Type:** `Free`
+4. Tambahkan **Environment Variables**:
+   - `NODE_VERSION` = `20.18.0`
+   - `HOST` = `0.0.0.0`
+   - `PORT` = `10000`
+   - `DATABASE_URL` = `<Connection String Neon Anda>`
+   - `JADWALIN_PIN` = `<PIN 4 Digit Anda>`
+5. Buka tab **Advanced**, isi **Health Check Path:** `/health`.
+6. Klik **Create Web Service**.
+
+Setelah proses deploy selesai (~1-2 menit), Render akan memberikan URL publik backend Anda, misalnya:
+`https://luangin-backend.onrender.com`
+
+### Verifikasi Backend di Browser
+Buka URL health check:
+```text
+https://<nama-backend-anda>.onrender.com/health
+```
+Pastikan menghasilkan respons JSON:
 ```json
 {
   "status": "ok",
   "appName": "luang.in",
   "schemaVersion": 2,
-  "storage": "upstash_redis",
-  "kvConnected": true
+  "storage": "neon_postgres",
+  "databaseConnected": true
 }
 ```
-*(Endpoint `?ping=true` hanya memeriksa status koneksi dan tidak pernah membuka data tugas atau PIN Anda.)*
 
 ---
 
-## 4. Pasang sebagai Aplikasi Offline-First di iPhone / iPad (iOS)
-1. Buka URL `https://<nama-proyek-anda>.vercel.app` di **Safari iOS** *(gunakan Safari agar pemasangan Home Screen PWA penuh aktif)*.
-2. Masukkan 4 digit **`JADWALIN_PIN`** Anda hingga masuk ke ruang kerja `luang.in` (status berubah menjadi **`Tersinkron 24/7`**).
-3. Ketuk tombol **Share** (ikon kotak dengan panah ke atas) -> pilih **Add to Home Screen** (*Tambah ke Layar Utama*) -> ketuk **Add**.
-4. Buka ikon **luang.in** dari Home Screen iPhone Anda:
-   - Saat **Mode Pesawat / offline**, app tetap terbuka instan dari Service Worker (`luangin-v3`) dan menyimpan perubahan di **IndexedDB + localStorage** dengan label **`Lokal Offline (Menunggu Sync)`**.
-   - Begitu internet tersambung kembali, `luang.in` otomatis mengunggah perubahan offline ke cloud tanpa tertimpa data lama.
+## 3. Deploy Frontend PWA ke Vercel
+
+1. Buka [vercel.com](https://vercel.com) dan login dengan akun GitHub Anda.
+2. Klik **Add New... -> Project** -> import repositori **`Rea1kah2/jadwal-in`**.
+3. Konfigurasi build:
+   - **Framework Preset:** `Other`
+   - **Root Directory:** `./`
+   - **Build Command:** kosongkan
+   - **Output Directory:** kosongkan (dikelola oleh `vercel.json`)
+4. Klik **Deploy**.
+5. Dalam beberapa detik, frontend PWA Anda aktif di:
+   `https://<nama-proyek>.vercel.app`
 
 ---
 
-## 5. Sinkronisasi Dua Arah dengan Native iOS SwiftUI App (`JadwalIn`)
-1. Buka `JadwalIn.xcodeproj` di Xcode dan jalankan di iPhone / Simulator.
-2. Masuk ke tab **Wawasan -> Sinkronisasi Cloud (Vercel)**.
-3. Aktifkan **Aktifkan Sync 24/7**, masukkan:
-   - **URL Vercel:** `https://<nama-proyek-anda>.vercel.app`
-   - **PIN Akses Server:** PIN `JADWALIN_PIN` yang sama.
-4. Ketuk **Tarik & Sinkron** — tugas, jadwal kuliah, habit, countdown, dan sesi fokus kini tersinkron otomatis antara iPhone Native App dan Web PWA!
+## 4. Konfigurasi & Pemasangan PWA di iPhone (iOS)
+
+1. Buka URL Vercel Anda (`https://<nama-proyek>.vercel.app`) di **Safari iOS**.
+2. Masukkan 4 digit **`JADWALIN_PIN`** Anda untuk membuka ruang kerja.
+3. Buka menu **Pengaturan** (ikon roda gigi di pojok kiri bawah / footer sidebar):
+   - Pada bagian **Sinkronisasi Cloud (Render / Neon)**, masukkan **URL Backend Render** Anda:
+     ```text
+     https://<nama-backend-anda>.onrender.com
+     ```
+   - Ketuk **Uji Koneksi** (pastikan muncul tanda centang hijau *Terhubung!*).
+   - Ketuk **Simpan URL**.
+4. **Pasang ke Layar Utama iPhone:**
+   - Ketuk tombol **Share** di Safari (ikon kotak dengan panah ke atas).
+   - Pilih **Add to Home Screen** (*Tambah ke Layar Utama*) -> ketuk **Add**.
+5. **Kelebihan Mode Offline-First:**
+   - Saat membuka aplikasi dari Home Screen, aplikasi terbuka dalam **0 detik (instan)** bahkan saat offline atau saat Render sedang *cold start* (~30s).
+   - Seluruh mutasi tugas tersimpan di IndexedDB lokal (`pendingSync`), dan otomatis diunggah ke database Neon begitu server Render merespons!
+
+---
+
+## 5. Sinkronisasi dengan Native iOS SwiftUI App (`JadwalIn`)
+
+1. Buka `JadwalIn.xcodeproj` di Xcode dan jalankan di iPhone fisik atau Simulator.
+2. Masuk ke tab **Wawasan & Profil** -> scroll ke section **Sinkronisasi Cloud (Render / Neon)**.
+3. Aktifkan **Aktifkan Sync 24/7**:
+   - **URL Backend:** Masukkan URL Render Anda (cth: `https://<nama-backend-anda>.onrender.com`).
+   - **PIN Akses Server:** Masukkan PIN `JADWALIN_PIN` yang sama.
+4. Ketuk **Tarik & Sinkron**:
+   - Jadwal kuliah, daftar tugas, habit streak, countdown ujian, dan log fokus Pomodoro kini tersinkronisasi secara real-time antara iPhone Native App, iPad, dan Web PWA!

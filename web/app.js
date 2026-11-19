@@ -968,6 +968,34 @@ function saveLocalCache(markDirty = false) {
   }
 }
 
+function getCustomBackendUrl() {
+  try {
+    return localStorage.getItem('luangin_cloud_url') || '';
+  } catch {
+    return '';
+  }
+}
+
+function setCustomBackendUrl(url) {
+  try {
+    const cleaned = (url || '').trim().replace(/\/+$/, '');
+    if (cleaned) {
+      localStorage.setItem('luangin_cloud_url', cleaned);
+    } else {
+      localStorage.removeItem('luangin_cloud_url');
+    }
+  } catch {}
+}
+
+function getApiEndpoint(path = '/api/data') {
+  const custom = getCustomBackendUrl();
+  if (!custom) return path;
+  const base = custom.replace(/\/+$/, '');
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  if (base.endsWith('/api/data') && cleanPath === '/api/data') return base;
+  return `${base}${cleanPath}`;
+}
+
 async function loadBestLocalStore() {
   try {
     const lsRaw = localStorage.getItem('luangin_store_v2');
@@ -991,7 +1019,7 @@ async function pushDataToServer() {
   }
 
   try {
-    const res = await fetch('/api/data', {
+    const res = await fetch(getApiEndpoint('/api/data'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1054,7 +1082,7 @@ async function syncWithServer() {
     // Brief grace window right after local mutation so stale GET doesn't race POST
     if (Date.now() - (meta.lastLocalMutationAt || 0) < 4000) return;
 
-    const res = await fetch('/api/data', {
+    const res = await fetch(getApiEndpoint('/api/data'), {
       headers: { 'x-jadwalin-pin': pin },
       cache: 'no-store'
     });
@@ -1116,7 +1144,7 @@ async function verifyAndUnlock(pin) {
   const meta = await hydrateSyncMeta();
 
   try {
-    const res = await fetch('/api/data', {
+    const res = await fetch(getApiEndpoint('/api/data'), {
       headers: { 'x-jadwalin-pin': pin },
       cache: 'no-store'
     });
@@ -1207,7 +1235,7 @@ async function loadInitialData() {
         if (pushed) return true;
       }
 
-      const res = await fetch('/api/data', {
+      const res = await fetch(getApiEndpoint('/api/data'), {
         headers: { 'x-jadwalin-pin': pin },
         cache: 'no-store'
       });
@@ -2550,6 +2578,28 @@ function renderSettingsView() {
 
     <div class="settings-row">
       <div class="settings-label-col">
+        <h3>Sinkronisasi Cloud (Render / Neon)</h3>
+        <p>Arahkan PWA ke backend Render Anda. Jika dikosongkan, PWA menggunakan path standar <code class="inline-code">/api/data</code> (kompatibel dengan local server atau Vercel rewrite).</p>
+      </div>
+      <form id="form-settings-backend" class="settings-panel">
+        <div class="form-group">
+          <label class="form-label" for="set-backend-url">URL Backend Render</label>
+          <input type="url" id="set-backend-url" class="form-input" placeholder="https://luangin-backend.onrender.com" value="${escapeHtml(getCustomBackendUrl())}">
+          <span class="field-hint" style="font-size:12px;color:var(--text-tertiary);margin-top:4px;display:block;">
+            Contoh: <code class="inline-code">https://luangin-backend.onrender.com</code>. Kosongkan jika backend dan frontend berada di domain yang sama.
+          </span>
+        </div>
+        <div class="btn-row" style="display:flex;gap:10px;align-items:center;">
+          <button type="submit" class="btn-primary">Simpan URL</button>
+          <button type="button" class="btn-secondary" id="btn-test-backend-conn">Uji Koneksi</button>
+          <button type="button" class="btn-ghost-sm" id="btn-sync-now">Sinkronkan Sekarang</button>
+        </div>
+        <div id="backend-conn-status" style="margin-top:8px;font-size:12px;font-family:var(--font-mono);"></div>
+      </form>
+    </div>
+
+    <div class="settings-row">
+      <div class="settings-label-col">
         <h3>Keamanan, ekspor &amp; data</h3>
         <p>Kunci layar dengan PIN, minta izin notifikasi browser, atau muat ulang dataset sampel.</p>
       </div>
@@ -3131,6 +3181,45 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
+    if (e.target.id === 'btn-test-backend-conn') {
+      const statusEl = document.getElementById('backend-conn-status');
+      if (statusEl) {
+        statusEl.textContent = 'Menghubungkan ke backend (Render waking up)...';
+        statusEl.style.color = 'var(--text-secondary)';
+      }
+      const testUrl = getApiEndpoint('/api/data') + (getApiEndpoint('/api/data').includes('?') ? '&ping=true' : '?ping=true');
+      fetch(testUrl, { cache: 'no-store' })
+        .then(async (res) => {
+          if (res.ok) {
+            const json = await res.json();
+            if (statusEl) {
+              const dbStatus = json.databaseConnected ? 'Tersambung ke Neon PostgreSQL' : 'Mode In-Memory / Menghubungkan';
+              statusEl.textContent = `✓ Terhubung! Storage: ${json.storage || 'ok'} (${dbStatus})`;
+              statusEl.style.color = 'var(--success-color, #16A34A)';
+            }
+            showToast('Koneksi ke backend berhasil.');
+          } else {
+            if (statusEl) {
+              statusEl.textContent = `Server merespons status HTTP ${res.status}.`;
+              statusEl.style.color = 'var(--warning-color, #D97706)';
+            }
+          }
+        })
+        .catch(() => {
+          if (statusEl) {
+            statusEl.textContent = 'Gagal terhubung. Pastikan URL benar atau server Render sedang bangun (~30s cold start).';
+            statusEl.style.color = 'var(--danger-color, #DC2626)';
+          }
+        });
+      return;
+    }
+
+    if (e.target.id === 'btn-sync-now') {
+      showToast('Memulai sinkronisasi cloud...');
+      syncWithServer();
+      return;
+    }
+
     if (e.target.id === 'btn-lock-app') { lockApp(); return; }
     if (e.target.id === 'btn-reset-sample') {
       if (confirm('Muat ulang seluruh data dengan dataset contoh luang.in?')) {
@@ -3425,6 +3514,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       saveData();
       renderAll();
       showToast('Durasi PomoFlow diperbarui.');
+      return;
+    }
+
+    if (e.target.id === 'form-settings-backend') {
+      e.preventDefault();
+      const inputEl = document.getElementById('set-backend-url');
+      const val = inputEl ? inputEl.value : '';
+      setCustomBackendUrl(val);
+      showToast('URL backend disimpan.');
+      syncWithServer();
+      renderAll();
+      return;
     }
   });
 

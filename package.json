@@ -1,0 +1,29 @@
+{
+  "name": "luangin",
+  "version": "2.1.0",
+  "description": "luang.in - Minimalist Student Execution OS (Web PWA, Node.js Backend, Neon PostgreSQL, iOS SwiftUI)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "pg": "^8.13.1"
+  },
+  "keywords": [
+    "productivity",
+    "pwa",
+    "offline-first",
+    "postgresql",
+    "neon",
+    "render",
+    "swiftui"
+  ],
+  "author": "luang.in team",
+  "license": "MIT"
+}

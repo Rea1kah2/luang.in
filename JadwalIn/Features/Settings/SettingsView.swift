@@ -528,10 +528,10 @@ public struct SettingsView: View {
     }
 
     private var cloudSyncSection: some View {
-        Section("Sinkronisasi Cloud (Vercel)") {
+        Section("Sinkronisasi Cloud (Render / Neon)") {
             Toggle("Aktifkan Sync 24/7", isOn: $store.isCloudSyncEnabled)
 
-            TextField("URL Vercel (cth: https://luang-in.vercel.app)", text: $store.cloudSyncURL)
+            TextField("URL Backend (cth: https://luang-in.onrender.com)", text: $store.cloudSyncURL)
                 .keyboardType(.URL)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()

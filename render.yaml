@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: luangin-backend
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 20.18.0
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 10000
+      - key: JADWALIN_PIN
+        value: "1234"
+      - key: DATABASE_URL
+        sync: false

@@ -1,7 +1,9 @@
 /**
- * luang.in Cloud API: Vercel Serverless Function
- * Handles Store v2 synchronization with Upstash Redis KV and strict PIN authentication.
+ * luang.in Cloud API: Neon Serverless PostgreSQL Data Layer
+ * Handles Store v2 synchronization with Neon PostgreSQL JSONB and strict PIN authentication.
  */
+
+const { Pool } = require('pg');
 
 const cleanValue = (val) => (val ? String(val).trim().replace(/^["']|["']$/g, '') : null);
 
@@ -9,93 +11,90 @@ function getExpectedPin() {
   return cleanValue(process.env.JADWALIN_PIN) || '1234';
 }
 
-function getKvCredentials() {
-  const rawUrl =
-    process.env.UPSTASH_REDIS_REST_URL ||
-    process.env.KV_REST_API_URL ||
-    process.env.STORAGE_KV_REST_API_URL ||
-    process.env.VERCEL_KV_REST_API_URL;
+const STORE_KEY = 'jadwalin_store';
 
-  const rawToken =
-    process.env.UPSTASH_REDIS_REST_TOKEN ||
-    process.env.KV_REST_API_TOKEN ||
-    process.env.STORAGE_KV_REST_API_TOKEN ||
-    process.env.VERCEL_KV_REST_API_TOKEN;
+let pool = null;
+let isTableInitialized = false;
 
-  const kvUrl = rawUrl ? cleanValue(rawUrl).replace(/\/+$/, '') : null;
-  const kvToken = cleanValue(rawToken);
-  return { kvUrl, kvToken };
+function getDbPool() {
+  const connectionString = cleanValue(process.env.DATABASE_URL);
+  if (!connectionString) return null;
+
+  if (!pool) {
+    pool = new Pool({
+      connectionString,
+      ssl: {
+        rejectUnauthorized: false
+      },
+      max: 10,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000
+    });
+
+    pool.on('error', (err) => {
+      console.error('PostgreSQL idle client error:', err.message);
+    });
+  }
+  return pool;
 }
 
-const STORE_KV_KEY = 'jadwalin_store';
+async function ensureTableAndSeed(db) {
+  if (isTableInitialized) return;
 
-async function getFromKv() {
-  const { kvUrl, kvToken } = getKvCredentials();
-  if (!kvUrl || !kvToken) return null;
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS app_store (
+      key VARCHAR(64) PRIMARY KEY,
+      payload JSONB NOT NULL,
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+
+  // Check if store key exists, seed if empty
+  const checkRes = await db.query('SELECT 1 FROM app_store WHERE key = $1 LIMIT 1', [STORE_KEY]);
+  if (checkRes.rowCount === 0) {
+    const seed = normalizeStore(buildSeedData());
+    await db.query(
+      `INSERT INTO app_store (key, payload, updated_at) VALUES ($1, $2, NOW()) ON CONFLICT (key) DO NOTHING;`,
+      [STORE_KEY, JSON.stringify(seed)]
+    );
+  }
+
+  isTableInitialized = true;
+}
+
+async function getFromPostgres() {
+  const db = getDbPool();
+  if (!db) return null;
 
   try {
-    // 1. Primary: Upstash / Vercel KV command-array POST ["GET", key]
-    const cmdRes = await fetch(`${kvUrl}/`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${kvToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(['GET', STORE_KV_KEY])
-    });
-    if (cmdRes.ok) {
-      const cmdJson = await cmdRes.json();
-      if (cmdJson && 'result' in cmdJson) {
-        if (!cmdJson.result) return null;
-        return typeof cmdJson.result === 'string' ? JSON.parse(cmdJson.result) : cmdJson.result;
-      }
-    }
-
-    // 2. Fallback: REST path GET /get/{key}
-    const pathRes = await fetch(`${kvUrl}/get/${STORE_KV_KEY}`, {
-      headers: { Authorization: `Bearer ${kvToken}` }
-    });
-    if (pathRes.ok) {
-      const pathJson = await pathRes.json();
-      if (pathJson && pathJson.result) {
-        return typeof pathJson.result === 'string' ? JSON.parse(pathJson.result) : pathJson.result;
-      }
+    await ensureTableAndSeed(db);
+    const res = await db.query('SELECT payload FROM app_store WHERE key = $1 LIMIT 1', [STORE_KEY]);
+    if (res.rowCount > 0 && res.rows[0].payload) {
+      const payload = res.rows[0].payload;
+      return typeof payload === 'string' ? JSON.parse(payload) : payload;
     }
   } catch (err) {
-    console.error('Upstash read error:', err);
+    console.error('Neon PostgreSQL read error:', err.message);
   }
   return null;
 }
 
-async function saveToKv(payload) {
-  const { kvUrl, kvToken } = getKvCredentials();
-  if (!kvUrl || !kvToken) return false;
+async function saveToPostgres(payload) {
+  const db = getDbPool();
+  if (!db) return false;
 
-  const serialized = JSON.stringify(payload);
   try {
-    // 1. Primary: Upstash / Vercel KV command-array POST ["SET", key, serialized]
-    const cmdRes = await fetch(`${kvUrl}/`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${kvToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(['SET', STORE_KV_KEY, serialized])
-    });
-    if (cmdRes.ok) return true;
-
-    // 2. Fallback: REST path POST /set/{key} with raw serialized JSON
-    const fallbackRes = await fetch(`${kvUrl}/set/${STORE_KV_KEY}`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${kvToken}`,
-        'Content-Type': 'text/plain; charset=utf-8'
-      },
-      body: serialized
-    });
-    return fallbackRes.ok;
+    await ensureTableAndSeed(db);
+    const query = `
+      INSERT INTO app_store (key, payload, updated_at)
+      VALUES ($1, $2, NOW())
+      ON CONFLICT (key)
+      DO UPDATE SET payload = EXCLUDED.payload, updated_at = NOW();
+    `;
+    await db.query(query, [STORE_KEY, JSON.stringify(payload)]);
+    return true;
   } catch (err) {
-    console.error('Upstash write error:', err);
+    console.error('Neon PostgreSQL write error:', err.message);
     return false;
   }
 }
@@ -495,10 +494,11 @@ function normalizeStore(payload) {
   };
 }
 
-// In-memory fallback if Upstash KV is not yet provisioned
+// In-memory fallback if Neon PostgreSQL is not yet configured
 let inMemoryStore = null;
 
 module.exports = async function handler(req, res) {
+  // Global CORS headers for cross-origin access from Vercel PWA, Safari iOS, or custom origins
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-jadwalin-pin');
@@ -507,25 +507,38 @@ module.exports = async function handler(req, res) {
     return res.status(204).end();
   }
 
-  const { kvUrl, kvToken } = getKvCredentials();
-  const kvConnected = Boolean(kvUrl && kvToken);
-  const storageBackend = kvConnected ? 'upstash_redis' : 'in_memory_fallback';
+  const db = getDbPool();
+  let dbConnected = false;
+  if (db) {
+    try {
+      const pingRes = await db.query('SELECT 1');
+      dbConnected = Boolean(pingRes && pingRes.rowCount > 0);
+    } catch (e) {
+      dbConnected = false;
+    }
+  }
+
+  const storageBackend = db ? (dbConnected ? 'neon_postgres' : 'neon_connecting') : 'in_memory_fallback';
   res.setHeader('X-Storage-Backend', storageBackend);
   res.setHeader('Cache-Control', 'no-store, max-age=0');
 
-  const isPing = (req.query && req.query.ping === 'true') || (typeof req.url === 'string' && req.url.includes('ping=true'));
+  const isPing =
+    (req.query && req.query.ping === 'true') ||
+    (typeof req.url === 'string' && req.url.includes('ping=true')) ||
+    (typeof req.url === 'string' && req.url === '/health');
+
   if (req.method === 'GET' && isPing) {
     return res.status(200).json({
       status: 'ok',
       appName: 'luang.in',
       schemaVersion: 2,
       storage: storageBackend,
-      kvConnected,
+      databaseConnected: dbConnected,
       timestamp: new Date().toISOString()
     });
   }
 
-  // Strict PIN Validation (no hardcoded '1234' bypass when JADWALIN_PIN is set)
+  // Strict PIN Validation
   const clientPin = cleanValue(req.headers['x-jadwalin-pin']);
   const expectedPin = getExpectedPin();
   const isPinValid = Boolean(clientPin && clientPin === expectedPin);
@@ -538,13 +551,13 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method === 'GET') {
-    if (kvConnected) {
-      let kvData = await getFromKv();
-      if (!kvData) {
-        kvData = normalizeStore(buildSeedData());
-        await saveToKv(kvData);
+    if (db) {
+      let pgData = await getFromPostgres();
+      if (!pgData) {
+        pgData = normalizeStore(buildSeedData());
+        await saveToPostgres(pgData);
       }
-      return res.status(200).json(normalizeStore(kvData));
+      return res.status(200).json(normalizeStore(pgData));
     }
 
     if (!inMemoryStore) {
@@ -575,15 +588,15 @@ module.exports = async function handler(req, res) {
     const normalized = normalizeStore(payload);
     inMemoryStore = normalized;
 
-    let kvSaved = false;
-    if (kvConnected) {
-      kvSaved = await saveToKv(normalized);
+    let pgSaved = false;
+    if (db) {
+      pgSaved = await saveToPostgres(normalized);
     }
 
     return res.status(200).json({
       status: 'ok',
-      storage: kvSaved ? 'upstash_redis' : 'in_memory_fallback',
-      kvSaved,
+      storage: pgSaved ? 'neon_postgres' : 'in_memory_fallback',
+      databaseSaved: pgSaved,
       schemaVersion: 2,
       syncedAt: new Date().toISOString()
     });

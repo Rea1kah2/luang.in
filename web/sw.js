@@ -1,14 +1,14 @@
-const CACHE_NAME = 'luangin-v4';
+const CACHE_NAME = 'luangin-v5';
 const ASSETS = [
   './',
   './index.html',
-  './style.css?v=6',
-  './app.js?v=6',
-  './manifest.json?v=6',
-  './icon.svg?v=6',
-  './icon-192.png?v=6',
-  './icon-512.png?v=6',
-  './apple-touch-icon.png?v=6'
+  './style.css?v=7',
+  './app.js?v=7',
+  './manifest.json?v=7',
+  './icon.svg?v=7',
+  './icon-192.png?v=7',
+  './icon-512.png?v=7',
+  './apple-touch-icon.png?v=7'
 ];
 
 self.addEventListener('install', (event) => {

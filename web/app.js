@@ -1515,6 +1515,58 @@ function renderTimeGapRibbon(containerId, dayOfWeek = getDayOfWeek(new Date()), 
   const nowMin = now.getHours() * 60 + now.getMinutes();
   const showNowMarker = toDateKey(refDate) === toDateKey(now) && nowMin >= WIN_START && nowMin <= WIN_END;
 
+  // Mobile Adaptation: Tactical Glance Card instead of micro-scale squished barcode
+  if (window.innerWidth < 768) {
+    if (bestGap) {
+      const startStr = minutesToTime(bestGap.startMin);
+      const endStr = minutesToTime(bestGap.endMin);
+      const recTaskTitle = recommendedTask ? recommendedTask.title : 'Belum ada tugas terjadwal';
+      const recTaskId = recommendedTask ? recommendedTask.id : '';
+      const recPomos = recommendedTask ? (recommendedTask.estimatedPomos || 1) : 1;
+
+      container.innerHTML = `
+        <div class="mobile-gap-glance">
+          <div class="mobile-gap-head">
+            <span class="mobile-gap-badge">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Smart Gap Terdekat
+            </span>
+            <span class="mobile-gap-duration">${bestGap.duration} mnt luang (${gaps.length} sela hari ini)</span>
+          </div>
+          <div class="mobile-gap-times">${startStr} – ${endStr}</div>
+          <div class="mobile-gap-rec">
+            ${recommendedTask ? `Disarankan fokus: <strong>${escapeHtml(recTaskTitle)}</strong> (~${recPomos} Pomo)` : `Tersedia waktu luang untuk istirahat atau mencicil tugas.`}
+          </div>
+          <div class="mobile-gap-actions">
+            ${recommendedTask ? `
+              <button type="button" class="btn-primary-sm" id="btn-apply-smart-gap" data-gap-start="${bestGap.startMin}" data-gap-end="${Math.min(bestGap.endMin, bestGap.startMin + Math.max(30, recPomos * 30))}" data-task-id="${recTaskId}">
+                Jadwalkan Tugas
+              </button>
+              <button type="button" class="btn-secondary" data-pomo-task="${recTaskId}">
+                Mulai Fokus
+              </button>
+            ` : `
+              <button type="button" class="btn-primary-sm" id="btn-open-task-modal">
+                Tambah Tugas
+              </button>
+            `}
+          </div>
+        </div>
+      `;
+    } else {
+      container.innerHTML = `
+        <div class="mobile-gap-glance">
+          <div class="mobile-gap-head">
+            <span class="mobile-gap-badge">Smart Gap</span>
+            <span class="mobile-gap-duration">Jadwal Penuh</span>
+          </div>
+          <div class="mobile-gap-rec">Hari ini tidak ada sela waktu kosong &gt;= 25 menit. Fokus pada jadwal kelas &amp; tugas utama.</div>
+        </div>
+      `;
+    }
+    return;
+  }
+
   const pct = (m) => (((m - WIN_START) / SPAN) * 100).toFixed(2);
   const wPct = (s, e) => (((e - s) / SPAN) * 100).toFixed(2);
 
@@ -1788,14 +1840,19 @@ function renderTasksView() {
 function renderDetailInspector() {
   const panel = document.getElementById('detail-inspector');
   const body = document.getElementById('detail-inspector-body');
+  const backdrop = document.getElementById('sheet-backdrop');
   const task = AppState.store.tasks.find((t) => t.id === AppState.selectedTaskId);
 
   if (!task || AppState.activeModule !== 'tasks') {
     panel.classList.add('hidden');
+    if (backdrop) backdrop.classList.remove('active');
     return;
   }
 
   panel.classList.remove('hidden');
+  if (backdrop && window.innerWidth < 768) {
+    backdrop.classList.add('active');
+  }
   const dueLocal = task.dueDate ? new Date(task.dueDate) : new Date();
   const dueDateVal = `${dueLocal.getFullYear()}-${twoDigit(dueLocal.getMonth() + 1)}-${twoDigit(dueLocal.getDate())}`;
   const dueTimeVal = `${twoDigit(dueLocal.getHours())}:${twoDigit(dueLocal.getMinutes())}`;
@@ -3647,4 +3704,30 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
   };
+
+  // Mobile Bottom Sheet & FAB Interactions
+  const mobileFab = document.getElementById('btn-mobile-fab');
+  if (mobileFab) {
+    mobileFab.onclick = () => {
+      document.getElementById('modal-task').classList.add('active');
+    };
+  }
+
+  const sheetBackdrop = document.getElementById('sheet-backdrop');
+  if (sheetBackdrop) {
+    sheetBackdrop.onclick = () => {
+      AppState.selectedTaskId = null;
+      renderTasksView();
+    };
+  }
+
+  // Adaptive Resize Observer: switch seamlessly between desktop ribbon & mobile tactical glance
+  let prevIsMobile = window.innerWidth < 768;
+  window.addEventListener('resize', () => {
+    const isMobile = window.innerWidth < 768;
+    if (isMobile !== prevIsMobile) {
+      prevIsMobile = isMobile;
+      renderAll();
+    }
+  });
 });

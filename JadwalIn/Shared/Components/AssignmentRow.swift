@@ -44,9 +44,12 @@ public struct AssignmentRow: View {
                             .foregroundColor(Theme.inkMuted)
                     }
                 }
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
             }
             .buttonStyle(BorderlessButtonStyle())
-            .padding(.top, 2)
+            .offset(x: -10, y: -10)
+            .padding(.trailing, -10)
 
             VStack(alignment: .leading, spacing: 5) {
                 HStack(alignment: .top, spacing: 8) {

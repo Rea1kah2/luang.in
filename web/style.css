@@ -17,7 +17,7 @@
   --muted: #5D5F60;
   --faint: #6B7280;
 
-  --accent: #4772FA;
+  --accent: #3560F0;
   --accent-tint: #EEF2FF;
   --accent-ink: #1D3E9E;
   --primary-fill: #131416;
@@ -38,7 +38,7 @@
 
   --prio-high: #C4242A;
   --prio-medium: #D97706;
-  --prio-low: #4772FA;
+  --prio-low: #3560F0;
   --prio-none: #94A3B8;
 
   --radius-sheet: 16px;
@@ -612,7 +612,7 @@ code, kbd, .inline-code, .kbd-hint, .code-id, .mini-pomo-clock, .pomo-timer-code
   flex: 1;
   min-height: 0;
   margin: 0 8px 8px 0;
-  background: var(--surface);
+  background: transparent;
   border: 1px solid var(--border);
   border-radius: var(--radius-sheet);
   overflow: hidden;
@@ -630,6 +630,7 @@ code, kbd, .inline-code, .kbd-hint, .code-id, .mini-pomo-clock, .pomo-timer-code
   flex: 1;
   min-width: 0;
   overflow-y: auto;
+  background: var(--surface);
   padding: 24px 28px 40px;
 }
 
@@ -2072,8 +2073,24 @@ code, kbd, .inline-code, .kbd-hint, .code-id, .mini-pomo-clock, .pomo-timer-code
   border-top: 1px solid var(--rule);
 }
 
-/* Mobile Bottom Nav */
+/* Mobile Components Base (Hidden on Desktop) */
 .mobile-bottom-nav {
+  display: none;
+}
+
+.fab-quick-add {
+  display: none;
+}
+
+.sheet-backdrop {
+  display: none;
+}
+
+.sheet-drag-handle {
+  display: none;
+}
+
+.mobile-gap-glance {
   display: none;
 }
 
@@ -2134,8 +2151,16 @@ code, kbd, .inline-code, .kbd-hint, .code-id, .mini-pomo-clock, .pomo-timer-code
     width: 272px;
   }
 
+  /* Safe Area Insets for iOS Notch & Android Status Bar */
   .top-bar {
-    padding: 0 12px;
+    padding-top: max(10px, env(safe-area-inset-top));
+    padding-bottom: 8px;
+    padding-left: 16px;
+    padding-right: 16px;
+    height: auto;
+    min-height: 52px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
   }
 
   .topbar-search-trigger,
@@ -2145,24 +2170,164 @@ code, kbd, .inline-code, .kbd-hint, .code-id, .mini-pomo-clock, .pomo-timer-code
     display: none;
   }
 
+  /* Edge-to-edge breathing room: drop rigid nested boxes */
   .main-sheet {
     margin: 0;
     border-radius: 0;
-    border-left: none;
-    border-right: none;
+    border: none;
+    background: transparent;
+  }
+
+  .sheet-main {
+    padding: 14px 16px calc(92px + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Ergonomic mobile header */
+  .page-head-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .page-title {
+    font-size: 24px;
+    line-height: 1.2;
+  }
+
+  .page-head-actions {
+    justify-content: flex-start;
+  }
+
+  .segmented-tabs {
+    width: 100%;
+    display: flex;
+  }
+
+  .seg-tab {
+    flex: 1;
+    text-align: center;
+    font-size: 13px;
+  }
+
+  /* Hide Desktop NLP quick-add box to reclaim vertical viewport */
+  .nlp-composer-card {
+    display: none;
   }
 
   #btn-open-task-modal {
     display: none;
   }
 
-  .toast-container {
-    bottom: 72px;
-    right: 14px;
+  /* Ergonomic Floating Action Button (FAB) */
+  .fab-quick-add {
+    display: flex;
+    position: fixed;
+    right: 20px;
+    bottom: calc(66px + env(safe-area-inset-bottom));
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #FFFFFF;
+    box-shadow: 0 6px 20px rgba(53, 96, 240, 0.4);
+    align-items: center;
+    justify-content: center;
+    z-index: 75;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  .sheet-main {
-    padding: 16px 16px 84px;
+  .fab-quick-add:active {
+    transform: scale(0.92);
+    box-shadow: 0 2px 10px rgba(53, 96, 240, 0.3);
+  }
+
+  /* Smart Gap Tactical Glance Card */
+  .mobile-gap-glance {
+    display: block;
+    background: var(--raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+  }
+
+  .mobile-gap-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .mobile-gap-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--accent-tint);
+    color: var(--accent-ink);
+  }
+
+  .mobile-gap-duration {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .mobile-gap-times {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .mobile-gap-rec {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.4;
+    margin-bottom: 12px;
+  }
+
+  .mobile-gap-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .mobile-gap-actions button {
+    flex: 1;
+  }
+
+  /* Apple HIG / Material 3 Touch Targets for Checkbox */
+  .prio-check-btn {
+    position: relative;
+    min-width: 20px;
+    min-height: 20px;
+  }
+
+  .prio-check-btn::before {
+    content: '';
+    position: absolute;
+    top: -12px;
+    bottom: -12px;
+    left: -12px;
+    right: -12px;
+  }
+
+  .task-row {
+    padding: 13px 12px;
+    gap: 14px;
   }
 
   .eisenhower-grid {
@@ -2178,12 +2343,60 @@ code, kbd, .inline-code, .kbd-hint, .code-id, .mini-pomo-clock, .pomo-timer-code
     flex-direction: column;
   }
 
-  .detail-inspector {
-    top: 0;
-    width: 100%;
-    z-index: 115;
+  /* Native Bottom Sheet for Detail Inspector */
+  .sheet-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 110;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease-out;
   }
 
+  .sheet-backdrop.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .detail-inspector {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    width: 100%;
+    max-height: 85dvh;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-left: none;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.22);
+    z-index: 115;
+    transform: translateY(105%);
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    padding: 8px 18px calc(24px + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .detail-inspector:not(.hidden) {
+    transform: translateY(0);
+  }
+
+  .sheet-drag-handle {
+    display: block;
+    width: 38px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--control);
+    margin: 6px auto 14px;
+  }
+
+  /* Ergonomic Bottom Navigation */
   .mobile-bottom-nav {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -2194,21 +2407,31 @@ code, kbd, .inline-code, .kbd-hint, .code-id, .mini-pomo-clock, .pomo-timer-code
     z-index: 80;
     background: var(--surface);
     border-top: 1px solid var(--border);
-    padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+    padding: 6px 4px calc(8px + env(safe-area-inset-bottom));
+    box-shadow: 0 -1px 8px rgba(0, 0, 0, 0.04);
   }
 
   .mobile-nav-btn {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 3px;
     font-size: 11px;
     color: var(--muted);
-    padding: 4px 0;
+    padding: 5px 0;
+    min-height: 44px;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .mobile-nav-btn.active {
     color: var(--accent);
     font-weight: 600;
+  }
+
+  .toast-container {
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    right: 14px;
+    left: 14px;
   }
 }

@@ -5,20 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>luang.in — Execution OS &amp; Academic Planner</title>
 
-  <link rel="manifest" href="manifest.json?v=6">
-  <meta name="theme-color" content="#4772FA">
+  <link rel="manifest" href="manifest.json?v=7">
+  <meta name="theme-color" content="#3560F0">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="luang.in">
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=6">
-  <link rel="apple-touch-icon-precomposed" href="apple-touch-icon.png?v=6">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=6">
-  <link rel="icon" type="image/svg+xml" href="icon.svg?v=6">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=7">
+  <link rel="apple-touch-icon-precomposed" href="apple-touch-icon.png?v=7">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=7">
+  <link rel="icon" type="image/svg+xml" href="icon.svg?v=7">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=6">
+  <link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
   <div id="toast-container" class="toast-container" aria-live="polite"></div>
@@ -363,13 +363,20 @@
             </section>
           </main>
 
-          <!-- Right Task Detail Inspector Drawer -->
+          <!-- Right Task Detail Inspector Drawer / Mobile Bottom Sheet -->
+          <div id="sheet-backdrop" class="sheet-backdrop"></div>
           <aside id="detail-inspector" class="detail-inspector hidden" aria-label="Detail tugas">
+            <div class="sheet-drag-handle"></div>
             <div id="detail-inspector-body" class="detail-inspector-body"></div>
           </aside>
         </div>
       </div>
     </div>
+
+    <!-- Mobile Floating Action Button (FAB) -->
+    <button type="button" class="fab-quick-add mobile-only" id="btn-mobile-fab" aria-label="Tambah tugas baru">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
 
     <!-- Mobile Bottom Navigation -->
     <nav class="mobile-bottom-nav" aria-label="Navigasi cepat ponsel">
@@ -400,7 +407,7 @@
   <div id="modal-command" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="cmd-modal-title">
     <div class="modal-card modal-card-md">
       <div class="modal-header">
-        <h3 id="cmd-modal-title" class="modal-title">Pencarian cepat &amp; perintah NLP</h3>
+        <h2 id="cmd-modal-title" class="modal-title">Pencarian cepat &amp; perintah NLP</h2>
         <button type="button" class="modal-close-btn" data-close-modal="modal-command" aria-label="Tutup"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="form-group">
@@ -414,7 +421,7 @@
   <div id="modal-task" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="task-modal-title">
     <div class="modal-card">
       <div class="modal-header">
-        <h3 id="task-modal-title" class="modal-title">Tambah tugas baru</h3>
+        <h2 id="task-modal-title" class="modal-title">Tambah tugas baru</h2>
         <button type="button" class="modal-close-btn" data-close-modal="modal-task" aria-label="Tutup"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <form id="form-add-task">
@@ -500,7 +507,7 @@
   <div id="modal-course" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="course-modal-title">
     <div class="modal-card">
       <div class="modal-header">
-        <h3 id="course-modal-title" class="modal-title">Tambah mata kuliah</h3>
+        <h2 id="course-modal-title" class="modal-title">Tambah mata kuliah</h2>
         <button type="button" class="modal-close-btn" data-close-modal="modal-course" aria-label="Tutup"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <form id="form-add-course">
@@ -579,7 +586,7 @@
   <div id="modal-habit" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="habit-modal-title">
     <div class="modal-card">
       <div class="modal-header">
-        <h3 id="habit-modal-title" class="modal-title">Buat kebiasaan baru</h3>
+        <h2 id="habit-modal-title" class="modal-title">Buat kebiasaan baru</h2>
         <button type="button" class="modal-close-btn" data-close-modal="modal-habit" aria-label="Tutup"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <form id="form-add-habit">
@@ -630,7 +637,7 @@
   <div id="modal-countdown" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="countdown-modal-title">
     <div class="modal-card">
       <div class="modal-header">
-        <h3 id="countdown-modal-title" class="modal-title">Tambah countdown Hari-H</h3>
+        <h2 id="countdown-modal-title" class="modal-title">Tambah countdown Hari-H</h2>
         <button type="button" class="modal-close-btn" data-close-modal="modal-countdown" aria-label="Tutup"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <form id="form-add-countdown">
@@ -671,7 +678,7 @@
   <div id="modal-timeblock" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="timeblock-modal-title">
     <div class="modal-card modal-card-sm">
       <div class="modal-header">
-        <h3 id="timeblock-modal-title" class="modal-title">Jadwalkan tugas ke sela waktu</h3>
+        <h2 id="timeblock-modal-title" class="modal-title">Jadwalkan tugas ke sela waktu</h2>
         <button type="button" class="modal-close-btn" data-close-modal="modal-timeblock" aria-label="Tutup"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <form id="form-timeblock">
@@ -696,6 +703,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>

@@ -5,20 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>luang.in — Execution OS &amp; Academic Planner</title>
 
-  <link rel="manifest" href="manifest.json?v=7">
+  <link rel="manifest" href="manifest.json?v=8">
   <meta name="theme-color" content="#3560F0">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="luang.in">
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=7">
-  <link rel="apple-touch-icon-precomposed" href="apple-touch-icon.png?v=7">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=7">
-  <link rel="icon" type="image/svg+xml" href="icon.svg?v=7">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=8">
+  <link rel="apple-touch-icon-precomposed" href="apple-touch-icon.png?v=8">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=8">
+  <link rel="icon" type="image/svg+xml" href="icon.svg?v=8">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
   <div id="toast-container" class="toast-container" aria-live="polite"></div>
@@ -213,6 +213,7 @@
         <button type="button" class="mini-pomo-btn" id="btn-mini-pomo-toggle">Buka</button>
       </div>
     </aside>
+    <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
 
     <!-- Right Workspace Column (Top Bar + White Inset Sheet) -->
     <div class="workspace-column">
@@ -235,6 +236,12 @@
         </button>
 
         <div class="top-bar-right">
+          <button type="button" class="icon-ghost-btn mobile-only" id="btn-mobile-search" aria-label="Cari tugas atau perintah NLP">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </button>
+          <button type="button" class="icon-ghost-btn mobile-only" id="btn-mobile-theme" aria-label="Ganti tema warna">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M4.93 4.93l1.41 1.41"/><path d="M17.66 17.66l1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/></svg>
+          </button>
           <span id="cloud-sync-status" class="sync-pill">Tersinkron</span>
           <span id="live-clock" class="topbar-clock">--:--</span>
           <button type="button" class="btn-primary-sm" id="btn-quick-new-task">+ Tugas</button>
@@ -406,6 +413,7 @@
   <!-- MODAL: COMMAND PALETTE (Cmd/Ctrl+K) -->
   <div id="modal-command" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="cmd-modal-title">
     <div class="modal-card modal-card-md">
+      <div class="sheet-drag-handle mobile-only"></div>
       <div class="modal-header">
         <h2 id="cmd-modal-title" class="modal-title">Pencarian cepat &amp; perintah NLP</h2>
         <button type="button" class="modal-close-btn" data-close-modal="modal-command" aria-label="Tutup"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
@@ -420,6 +428,7 @@
   <!-- MODAL: TAMBAH TUGAS LENGKAP -->
   <div id="modal-task" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="task-modal-title">
     <div class="modal-card">
+      <div class="sheet-drag-handle mobile-only"></div>
       <div class="modal-header">
         <h2 id="task-modal-title" class="modal-title">Tambah tugas baru</h2>
         <button type="button" class="modal-close-btn" data-close-modal="modal-task" aria-label="Tutup"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
@@ -506,6 +515,7 @@
   <!-- MODAL: TAMBAH / EDIT MATA KULIAH -->
   <div id="modal-course" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="course-modal-title">
     <div class="modal-card">
+      <div class="sheet-drag-handle mobile-only"></div>
       <div class="modal-header">
         <h2 id="course-modal-title" class="modal-title">Tambah mata kuliah</h2>
         <button type="button" class="modal-close-btn" data-close-modal="modal-course" aria-label="Tutup"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
@@ -585,6 +595,7 @@
   <!-- MODAL: TAMBAH KEBIASAAN (HABIT) -->
   <div id="modal-habit" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="habit-modal-title">
     <div class="modal-card">
+      <div class="sheet-drag-handle mobile-only"></div>
       <div class="modal-header">
         <h2 id="habit-modal-title" class="modal-title">Buat kebiasaan baru</h2>
         <button type="button" class="modal-close-btn" data-close-modal="modal-habit" aria-label="Tutup"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
@@ -636,6 +647,7 @@
   <!-- MODAL: TAMBAH COUNTDOWN -->
   <div id="modal-countdown" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="countdown-modal-title">
     <div class="modal-card">
+      <div class="sheet-drag-handle mobile-only"></div>
       <div class="modal-header">
         <h2 id="countdown-modal-title" class="modal-title">Tambah countdown Hari-H</h2>
         <button type="button" class="modal-close-btn" data-close-modal="modal-countdown" aria-label="Tutup"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
@@ -677,6 +689,7 @@
   <!-- MODAL: TIME-BLOCK SCHEDULE PICKER -->
   <div id="modal-timeblock" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="timeblock-modal-title">
     <div class="modal-card modal-card-sm">
+      <div class="sheet-drag-handle mobile-only"></div>
       <div class="modal-header">
         <h2 id="timeblock-modal-title" class="modal-title">Jadwalkan tugas ke sela waktu</h2>
         <button type="button" class="modal-close-btn" data-close-modal="modal-timeblock" aria-label="Tutup"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
@@ -703,6 +716,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=7"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>

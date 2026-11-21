@@ -350,6 +350,18 @@ function normalizeStore(raw) {
 // ==========================================
 // 3. APPLICATION STATE & POMOFLOW RUNTIME
 // ==========================================
+function triggerHaptic(type = 'light') {
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    try {
+      if (type === 'light') navigator.vibrate(8);
+      else if (type === 'medium') navigator.vibrate(15);
+      else if (type === 'success') navigator.vibrate([10, 40, 15]);
+    } catch {
+      // Ignore vibration error
+    }
+  }
+}
+
 const AppState = {
   store: buildDefaultStore(),
   activeModule: 'tasks',        // tasks | calendar | matrix | focus | habits | insights | settings
@@ -361,7 +373,9 @@ const AppState = {
   selectedTaskId: null,         // task shown in right inspector
   calendarMode: 'daily',        // daily | weekly | month
   selectedDayOfWeek: getDayOfWeek(new Date()),
-  monthOffset: 0
+  monthOffset: 0,
+  matrixFilter: 'all',          // all | q1 | q2 | q3 | q4
+  selectedMonthDateKey: null    // null or YYYY-MM-DD
 };
 
 const PomoRuntime = {
@@ -2131,6 +2145,8 @@ function renderCalendarView() {
     const firstWeekday = (base.getDay() + 6) % 7; // 0 = Senin
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const todayKey = toDateKey(new Date());
+    const isMobile = window.innerWidth < 768;
+    const selectedKey = AppState.selectedMonthDateKey || todayKey;
 
     let cellsHtml = '';
     for (let i = 0; i < firstWeekday; i++) {
@@ -2142,11 +2158,68 @@ function renderCalendarView() {
       const wd = getDayOfWeek(dt);
       const dayCourses = courses.filter((c) => c.dayOfWeek === wd);
       const dayTasks = tasks.filter((t) => t.dueDate && toDateKey(new Date(t.dueDate)) === dk);
-      cellsHtml += `
-        <div class="month-day-cell ${dk === todayKey ? 'today' : ''}">
-          <div class="month-day-num">${day}</div>
-          ${dayCourses.slice(0, 2).map((c) => `<div class="month-event-dot-row">${escapeHtml(c.code || c.name)} ${c.startTime}</div>`).join('')}
-          ${dayTasks.slice(0, 2).map((t) => `<div class="month-event-dot-row" style="background:var(--accent-tint);color:var(--accent-ink);">${escapeHtml(t.title)}</div>`).join('')}
+      const isSelected = dk === selectedKey;
+
+      if (isMobile) {
+        cellsHtml += `
+          <div class="month-day-cell ${dk === todayKey ? 'today' : ''} ${isSelected ? 'selected' : ''}" data-cal-month-day="${dk}">
+            <div class="month-day-num">${day}</div>
+            <div class="month-event-dots-wrap">
+              ${dayCourses.slice(0, 3).map((c) => `<span class="cal-event-dot" style="background-color:#${escapeHtml(c.colorHex || '3560F0')};" title="${escapeHtml(c.name)}"></span>`).join('')}
+              ${dayTasks.slice(0, 3).map((t) => `<span class="cal-event-dot" style="background-color:var(--accent);" title="${escapeHtml(t.title)}"></span>`).join('')}
+            </div>
+          </div>
+        `;
+      } else {
+        cellsHtml += `
+          <div class="month-day-cell ${dk === todayKey ? 'today' : ''}">
+            <div class="month-day-num">${day}</div>
+            ${dayCourses.slice(0, 2).map((c) => `<div class="month-event-dot-row">${escapeHtml(c.code || c.name)} ${c.startTime}</div>`).join('')}
+            ${dayTasks.slice(0, 2).map((t) => `<div class="month-event-dot-row" style="background:var(--accent-tint);color:var(--accent-ink);">${escapeHtml(t.title)}</div>`).join('')}
+          </div>
+        `;
+      }
+    }
+
+    let agendaTrayHtml = '';
+    if (isMobile) {
+      const selDtParts = selectedKey.split('-').map(Number);
+      const selDt = new Date(selDtParts[0], selDtParts[1] - 1, selDtParts[2]);
+      const selWd = getDayOfWeek(selDt);
+      const selCourses = courses.filter((c) => c.dayOfWeek === selWd).sort((a, b) => a.startTime.localeCompare(b.startTime));
+      const selTasks = tasks.filter((t) => t.dueDate && toDateKey(new Date(t.dueDate)) === selectedKey);
+
+      agendaTrayHtml = `
+        <div class="month-agenda-tray">
+          <div class="month-agenda-head">
+            <span>Agenda: ${formatDateHuman(selectedKey)}</span>
+            <span class="task-group-count">${selCourses.length + selTasks.length} agenda</span>
+          </div>
+          ${selCourses.length === 0 && selTasks.length === 0
+            ? '<div style="font-size:12px;color:var(--muted);padding:4px 0;">Tidak ada kuliah atau tenggat tugas pada tanggal ini.</div>'
+            : `
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                ${selCourses.map((c) => `
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border-radius:6px;background:var(--raised);font-size:12.5px;">
+                    <div style="display:flex;align-items:center;gap:6px;">
+                      <span class="cal-event-dot" style="background-color:#${escapeHtml(c.colorHex || '3560F0')}"></span>
+                      <strong>${escapeHtml(c.code || c.name)}</strong>
+                      <span style="color:var(--muted);">${escapeHtml(c.name)}</span>
+                    </div>
+                    <span class="num" style="font-size:12px;color:var(--muted);">${c.startTime} - ${c.endTime}</span>
+                  </div>
+                `).join('')}
+                ${selTasks.map((t) => `
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border-radius:6px;background:var(--accent-tint);color:var(--accent-ink);font-size:12.5px;">
+                    <div style="display:flex;align-items:center;gap:6px;">
+                      <span class="cal-event-dot" style="background-color:var(--accent);"></span>
+                      <span style="font-weight:500;">${escapeHtml(t.title)}</span>
+                    </div>
+                    <span style="font-size:11px;font-weight:600;">Tenggat</span>
+                  </div>
+                `).join('')}
+              </div>
+            `}
         </div>
       `;
     }
@@ -2166,6 +2239,7 @@ function renderCalendarView() {
         </div>
         <div class="month-cells">${cellsHtml}</div>
       </div>
+      ${agendaTrayHtml}
     `;
     return;
   }
@@ -2185,7 +2259,7 @@ function renderCalendarView() {
   for (let h = 7; h <= 21; h++) hours.push(h);
 
   container.innerHTML = `
-    <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;">
+    <div class="cal-day-pills-row">
       ${[1, 2, 3, 4, 5, 6].map((d) => `
         <button type="button" class="seg-tab ${wd === d ? 'active' : ''}" data-cal-day="${d}" style="border:1px solid var(--border);">${DAY_NAMES[d]}</button>
       `).join('')}
@@ -2251,15 +2325,41 @@ function renderCalendarView() {
 function renderMatrixView() {
   const container = document.getElementById('matrix-content-container');
   const active = AppState.store.tasks.filter((t) => t.status === 'active');
+  const isMobile = window.innerWidth < 768;
+  const currentFilter = AppState.matrixFilter || 'all';
 
-  const quads = [
+  const allQuads = [
     { key: 'q1', title: 'Kuadran I • Penting & Mendesak', sub: 'Kerjakan terlebih dahulu (<= 48 jam)', cls: 'q1' },
     { key: 'q2', title: 'Kuadran II • Penting & Terjadwal', sub: 'Jadwalkan di sela waktu luang', cls: 'q2' },
     { key: 'q3', title: 'Kuadran III • Cepat & Mendesak', sub: 'Selesaikan ringkas atau delegasikan', cls: 'q3' },
     { key: 'q4', title: 'Kuadran IV • Backlog & Santai', sub: 'Evaluasi ulang jika jadwal penuh', cls: 'q4' }
   ];
 
-  container.innerHTML = quads.map((q) => {
+  const quads = (isMobile && currentFilter !== 'all')
+    ? allQuads.filter((q) => q.key === currentFilter)
+    : allQuads;
+
+  let filterBarHtml = '';
+  if (isMobile) {
+    const counts = {
+      all: active.length,
+      q1: active.filter((t) => classifyQuadrant(t) === 'q1').length,
+      q2: active.filter((t) => classifyQuadrant(t) === 'q2').length,
+      q3: active.filter((t) => classifyQuadrant(t) === 'q3').length,
+      q4: active.filter((t) => classifyQuadrant(t) === 'q4').length
+    };
+    filterBarHtml = `
+      <div class="matrix-mobile-filter">
+        <button type="button" class="seg-tab ${currentFilter === 'all' ? 'active' : ''}" data-matrix-filter="all">Semua (${counts.all})</button>
+        <button type="button" class="seg-tab ${currentFilter === 'q1' ? 'active' : ''}" data-matrix-filter="q1">Q1 (${counts.q1})</button>
+        <button type="button" class="seg-tab ${currentFilter === 'q2' ? 'active' : ''}" data-matrix-filter="q2">Q2 (${counts.q2})</button>
+        <button type="button" class="seg-tab ${currentFilter === 'q3' ? 'active' : ''}" data-matrix-filter="q3">Q3 (${counts.q3})</button>
+        <button type="button" class="seg-tab ${currentFilter === 'q4' ? 'active' : ''}" data-matrix-filter="q4">Q4 (${counts.q4})</button>
+      </div>
+    `;
+  }
+
+  container.innerHTML = filterBarHtml + quads.map((q) => {
     const items = active.filter((t) => classifyQuadrant(t) === q.key);
     return `
       <div class="quadrant-card">
@@ -2425,7 +2525,7 @@ function renderHabitsView() {
                   }).join('')}
                 </div>
               </div>
-              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+              <div class="habit-card-actions-row">
                 <button type="button" class="${isDone ? 'btn-accent-sm' : 'btn-primary-sm'}" data-habit-checkin="${h.id}">
                   ${isDone ? 'Tercapai' : h.type === 'counter' && h.goal > 1 ? '+1 Progres' : 'Check-in'}
                 </button>
@@ -2927,6 +3027,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.addEventListener('click', (e) => {
     const modBtn = e.target.closest('[data-module]');
     if (modBtn) {
+      triggerHaptic('light');
       switchModule(modBtn.dataset.module);
       return;
     }
@@ -2986,8 +3087,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const calDayBtn = e.target.closest('[data-cal-day]');
     if (calDayBtn) {
+      triggerHaptic('light');
       AppState.selectedDayOfWeek = parseInt(calDayBtn.dataset.calDay, 10);
       renderCalendarView();
+      return;
+    }
+
+    const calMonthDay = e.target.closest('[data-cal-month-day]');
+    if (calMonthDay) {
+      triggerHaptic('light');
+      AppState.selectedMonthDateKey = calMonthDay.dataset.calMonthDay;
+      renderCalendarView();
+      return;
+    }
+
+    const matrixFilterBtn = e.target.closest('[data-matrix-filter]');
+    if (matrixFilterBtn) {
+      triggerHaptic('light');
+      AppState.matrixFilter = matrixFilterBtn.dataset.matrixFilter;
+      renderMatrixView();
       return;
     }
 
@@ -2998,6 +3116,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const toggleTaskBtn = e.target.closest('[data-toggle-task]');
     if (toggleTaskBtn) {
       e.stopPropagation();
+      triggerHaptic('medium');
       completeOrToggleTask(toggleTaskBtn.dataset.toggleTask);
       return;
     }
@@ -3146,8 +3265,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           h.currentStreak = (h.currentStreak || 0) + 1;
           h.longestStreak = Math.max(h.longestStreak || 0, h.currentStreak);
           showToast(`Target "${h.name}" tercapai. Streak: ${h.currentStreak} hari.`);
+          triggerHaptic('success');
         } else {
           showToast(`Progres "${h.name}": ${nextVal}/${h.goal}`);
+          triggerHaptic('light');
         }
         saveData();
         renderAll();
@@ -3164,6 +3285,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         h.logs[key] = { status: 'skip', value: 0, mood: 'neutral', note: 'Izin (Streak-Safe)' };
         saveData();
         renderAll();
+        triggerHaptic('medium');
         showToast(`Izin tercatat untuk "${h.name}". Streak ${h.currentStreak} hari tetap aman.`);
       }
       return;
@@ -3208,11 +3330,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    if (e.target.id === 'btn-cycle-theme') {
+    if (e.target.id === 'btn-cycle-theme' || e.target.closest('#btn-cycle-theme') || e.target.id === 'btn-mobile-theme' || e.target.closest('#btn-mobile-theme')) {
       const curIdx = THEME_ORDER.indexOf(AppState.store.settings.theme);
       const next = THEME_ORDER[(curIdx + 1) % THEME_ORDER.length];
       applyTheme(next);
       saveData();
+      triggerHaptic('light');
       if (AppState.activeModule === 'settings') renderSettingsView();
       showToast(`Tema diganti ke ${THEME_META.find((m) => m.id === next).name}.`);
       return;
@@ -3610,9 +3733,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Static button bindings
-  document.getElementById('btn-open-sidebar').onclick = () => document.getElementById('nav-sidebar').classList.add('is-open');
-  document.getElementById('btn-close-sidebar').onclick = () => document.getElementById('nav-sidebar').classList.remove('is-open');
+  // Enable iOS Safari :active pseudo-class
+  document.addEventListener('touchstart', () => {}, { passive: true });
+
+  // Static button bindings & Mobile Drawer
+  const navSidebarEl = document.getElementById('nav-sidebar');
+  const sidebarBackdropEl = document.getElementById('sidebar-backdrop');
+  const openSidebar = () => {
+    triggerHaptic('light');
+    navSidebarEl.classList.add('is-open');
+    if (sidebarBackdropEl) sidebarBackdropEl.classList.add('active');
+  };
+  const closeSidebar = () => {
+    triggerHaptic('light');
+    navSidebarEl.classList.remove('is-open');
+    if (sidebarBackdropEl) sidebarBackdropEl.classList.remove('active');
+  };
+
+  document.getElementById('btn-open-sidebar').onclick = openSidebar;
+  document.getElementById('btn-close-sidebar').onclick = closeSidebar;
+  if (sidebarBackdropEl) sidebarBackdropEl.onclick = closeSidebar;
+
   document.getElementById('btn-rail-home').onclick = () => {
     AppState.smartFilter = 'today';
     AppState.selectedListId = null;
@@ -3624,6 +3765,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (PomoRuntime.isRunning) togglePomoTimer();
     else switchModule('focus');
   };
+
+  const mobileSearchBtn = document.getElementById('btn-mobile-search');
+  if (mobileSearchBtn) {
+    mobileSearchBtn.onclick = () => {
+      triggerHaptic('light');
+      cmdModal.classList.add('active');
+      cmdInput.value = '';
+      renderCommandResults('');
+      setTimeout(() => cmdInput.focus(), 60);
+    };
+  }
 
   document.getElementById('btn-quick-new-task').onclick = () => document.getElementById('modal-task').classList.add('active');
   document.getElementById('btn-open-task-modal').onclick = () => document.getElementById('modal-task').classList.add('active');
@@ -3709,6 +3861,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const mobileFab = document.getElementById('btn-mobile-fab');
   if (mobileFab) {
     mobileFab.onclick = () => {
+      triggerHaptic('light');
       document.getElementById('modal-task').classList.add('active');
     };
   }

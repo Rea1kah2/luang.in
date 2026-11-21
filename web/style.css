@@ -672,7 +672,47 @@ code, kbd, .inline-code, .kbd-hint, .code-id, .mini-pomo-clock, .pomo-timer-code
   gap: 8px;
 }
 
-/* Controls & Buttons */
+/* Controls & Buttons (Tactile Feedback & Anti-Tap-Highlight) */
+button,
+.btn-primary,
+.btn-primary-sm,
+.btn-secondary,
+.btn-accent-sm,
+.btn-ghost-sm,
+.btn-danger-outline,
+.icon-ghost-btn,
+.seg-tab,
+.sidebar-item,
+.mobile-nav-btn,
+.task-row,
+.habit-card-row,
+.noise-btn,
+.theme-choice-btn,
+.pin-btn,
+.sidebar-tag-chip,
+.fab-quick-add {
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.08s cubic-bezier(0.2, 0.8, 0.4, 1), background-color 0.12s ease-out, opacity 0.12s ease-out;
+}
+
+button:active,
+.btn-primary:active,
+.btn-primary-sm:active,
+.btn-secondary:active,
+.btn-accent-sm:active,
+.btn-ghost-sm:active,
+.btn-danger-outline:active,
+.icon-ghost-btn:active,
+.seg-tab:active,
+.sidebar-item:active,
+.mobile-nav-btn:active,
+.noise-btn:active,
+.theme-choice-btn:active,
+.sidebar-tag-chip:active {
+  transform: scale(0.965);
+  opacity: 0.88;
+}
+
 .btn-primary-sm,
 .btn-primary {
   height: 32px;
@@ -686,7 +726,6 @@ code, kbd, .inline-code, .kbd-hint, .code-id, .mini-pomo-clock, .pomo-timer-code
   align-items: center;
   justify-content: center;
   gap: 6px;
-  transition: opacity 0.14s ease-out;
 }
 
 .btn-primary {
@@ -2082,7 +2121,8 @@ code, kbd, .inline-code, .kbd-hint, .code-id, .mini-pomo-clock, .pomo-timer-code
   display: none;
 }
 
-.sheet-backdrop {
+.sheet-backdrop,
+.sidebar-backdrop {
   display: none;
 }
 
@@ -2100,6 +2140,24 @@ code, kbd, .inline-code, .kbd-hint, .code-id, .mini-pomo-clock, .pomo-timer-code
 @media (max-width: 1099px) {
   .mobile-only {
     display: inline-flex;
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 99;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease-out;
+  }
+
+  .sidebar-backdrop.active {
+    opacity: 1;
+    pointer-events: auto;
   }
 
   .nav-sidebar {
@@ -2148,7 +2206,12 @@ code, kbd, .inline-code, .kbd-hint, .code-id, .mini-pomo-clock, .pomo-timer-code
 
   .nav-sidebar {
     left: 0;
-    width: 272px;
+    width: 280px;
+    z-index: 105;
+  }
+
+  .sidebar-backdrop {
+    z-index: 104;
   }
 
   /* Safe Area Insets for iOS Notch & Android Status Bar */
@@ -2166,8 +2229,18 @@ code, kbd, .inline-code, .kbd-hint, .code-id, .mini-pomo-clock, .pomo-timer-code
   .topbar-search-trigger,
   .topbar-clock,
   .breadcrumb-root,
-  .breadcrumb-sep {
+  .breadcrumb-sep,
+  #btn-quick-new-task {
     display: none;
+  }
+
+  .top-bar-right {
+    gap: 4px;
+  }
+
+  .sync-pill {
+    padding: 2px 7px;
+    font-size: 11px;
   }
 
   /* Edge-to-edge breathing room: drop rigid nested boxes */
@@ -2219,6 +2292,26 @@ code, kbd, .inline-code, .kbd-hint, .code-id, .mini-pomo-clock, .pomo-timer-code
 
   #btn-open-task-modal {
     display: none;
+  }
+
+  /* Pinned Countdowns Horizontal Scroll Strip */
+  .pinned-countdowns-strip {
+    display: flex;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 8px;
+    padding-bottom: 2px;
+    margin-bottom: 14px;
+  }
+
+  .pinned-countdowns-strip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pinned-cd-pill {
+    flex-shrink: 0;
   }
 
   /* Ergonomic Floating Action Button (FAB) */
@@ -2330,8 +2423,190 @@ code, kbd, .inline-code, .kbd-hint, .code-id, .mini-pomo-clock, .pomo-timer-code
     gap: 14px;
   }
 
+  /* Mobile Kanban Carousel Snap */
+  .kanban-board {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 16px;
+    -webkit-overflow-scrolling: touch;
+    gap: 14px;
+    padding-bottom: 16px;
+    margin: 0 -16px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .kanban-col {
+    flex: 0 0 84vw;
+    scroll-snap-align: start;
+    min-height: 380px;
+  }
+
+  /* Mobile Calendar Styles */
+  .cal-day-pills-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+
+  .cal-day-pills-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .cal-day-pills-row .seg-tab {
+    flex-shrink: 0;
+    min-width: 56px;
+  }
+
+  .month-cells {
+    gap: 3px;
+  }
+
+  .month-day-cell {
+    min-height: 48px;
+    padding: 4px 2px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .month-day-num {
+    font-size: 12px;
+    margin-bottom: 2px;
+  }
+
+  .month-event-dots-wrap {
+    display: flex;
+    gap: 3px;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 100%;
+    padding: 0 2px;
+  }
+
+  .cal-event-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .month-day-cell.selected {
+    outline: 2px solid var(--accent);
+    background: var(--accent-tint);
+  }
+
+  .month-agenda-tray {
+    margin-top: 14px;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+  }
+
+  .month-agenda-head {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Mobile Eisenhower Quick-Filter */
+  .matrix-mobile-filter {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+    margin-bottom: 14px;
+  }
+
+  .matrix-mobile-filter::-webkit-scrollbar {
+    display: none;
+  }
+
+  .matrix-mobile-filter .seg-tab {
+    flex-shrink: 0;
+    padding: 5px 12px;
+    font-size: 12px;
+  }
+
   .eisenhower-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* Mobile PomoFlow Studio Thumb Controls */
+  .pomo-timer-code {
+    font-size: clamp(40px, 12vw, 56px);
+    margin: 14px 0 6px;
+  }
+
+  .pomo-controls-row {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .pomo-controls-row #btn-pomo-start-pause {
+    flex: 1.8;
+    height: 48px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .pomo-controls-row #btn-pomo-reset,
+  .pomo-controls-row #btn-pomo-save-sw {
+    flex: 1;
+    height: 48px;
+    font-size: 14px;
+  }
+
+  /* Mobile Habit Tracker Stacked Layout */
+  .habit-card-row {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .habit-card-actions-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    border-top: 1px solid var(--rule);
+    padding-top: 10px;
+  }
+
+  .habit-card-actions-row button:not(.icon-ghost-btn) {
+    flex: 1;
+    height: 36px;
+    font-size: 12.5px;
+    justify-content: center;
+  }
+
+  .habit-week-dots {
+    justify-content: space-between;
+    margin-top: 8px;
+  }
+
+  .habit-day-cell {
+    flex: 1;
+    max-width: 38px;
+    height: 28px;
   }
 
   .timeline-view-row {
@@ -2343,7 +2618,7 @@ code, kbd, .inline-code, .kbd-hint, .code-id, .mini-pomo-clock, .pomo-timer-code
     flex-direction: column;
   }
 
-  /* Native Bottom Sheet for Detail Inspector */
+  /* Native Bottom Sheet for Detail Inspector & All Modals */
   .sheet-backdrop {
     display: block;
     position: fixed;
@@ -2394,6 +2669,52 @@ code, kbd, .inline-code, .kbd-hint, .code-id, .mini-pomo-clock, .pomo-timer-code
     border-radius: 2px;
     background: var(--control);
     margin: 6px auto 14px;
+  }
+
+  /* Universal Bottom Sheet Modals on Mobile (Anti-Keyboard Overlap) */
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+
+  .modal-card {
+    max-width: 100%;
+    width: 100%;
+    max-height: 88dvh;
+    border-radius: 20px 20px 0 0;
+    border-bottom: none;
+    border-left: none;
+    border-right: none;
+    padding: 8px 18px calc(24px + env(safe-area-inset-bottom));
+    animation: slideUpSheet 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.25);
+  }
+
+  .modal-card .btn-row {
+    position: sticky;
+    bottom: 0;
+    background: var(--surface);
+    padding-top: 10px;
+    padding-bottom: 4px;
+    margin-top: 14px;
+    border-top: 1px solid var(--rule);
+    z-index: 10;
+  }
+
+  @keyframes slideUpSheet {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .pin-btn {
+    height: 52px;
   }
 
   /* Ergonomic Bottom Navigation */
